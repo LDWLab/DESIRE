@@ -988,7 +988,7 @@ def permutation_data(request, aln_id, tax_group):
     fh.close()
 
     hhsearchOutputFilePath = './static/test.hhr' + fileNameSuffix
-    hhsearch(alignmentFilePath, '/home/blastdb/ecod_F_fasta/ecodFam', hhsearchOutputFilePath, 550000, 50, False, True)
+    hh_output = hhsearch(alignmentFilePath, '/home/blastdb/ecod_F_fasta/ecodFam', hhsearchOutputFilePath, 550000, 50, False, True)
 
     os.remove(alignmentFilePath)
     os.remove(hhsearchOutputFilePath)

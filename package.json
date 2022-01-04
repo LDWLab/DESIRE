@@ -44,6 +44,8 @@
     "react-msa-viewer": "^1.0.1",
     "scrollbooster": "^3.0.2",
     "vue": "^2.6.12",
+    "vue-multi-select": "^4.6.0",
+    "vue-multiselect": "^2.1.6",
     "vue-style-loader": "^4.1.2",
     "vue-tour": "^1.5.0"
   }

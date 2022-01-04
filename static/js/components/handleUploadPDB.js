@@ -126,6 +126,7 @@ function postPDBdata (pdbID, entities){
                 if (parsedResponse == "Success!"){
                     var topology_viewer = `<pdb-topology-viewer id="PdbeTopViewer" entry-id=${pdbid} entity-id=${entityid} chain-id=${chainid} pvapi="true" filter-range=1,100000></pdb-topology-viewer>`
                     document.getElementById('topview').innerHTML = topology_viewer;
+                    document.getElementById('topview_duplicate').innerHTML = topology_viewer.replace('PdbeTopViewer', 'PdbeTopViewer_duplicate');
                     window.viewerInstanceTop = document.getElementById("PdbeTopViewer");
                 }
             }).catch(error => {

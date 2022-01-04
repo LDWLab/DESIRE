@@ -151,7 +151,7 @@
             <p><div v-if="true" class="checkbox" id="calculatePermutation">
                 <label><input type="checkbox" v-model="checked_permutation" v-on:change="handlePermutation(checked_permutation)">
                 Calculate Permutation</label>
-                <p>Input Permutation indices:<input text="text" id="permutation_indices"></p>
+                <p>Input permutation indices:<input text="text" id="permutation_indices"></p>
                 <select class="btn btn-outline-dark dropdown-toggle" id="permutationSubstructure" v-if="checked_permutation&&structure_mapping" v-model="property" v-on:change=" getPropensities(property); handlePermutation(checked_permutation)">
                     <option :value="null" selected disabled hidden>Select secondary structure</option>
                     <option :value="0">All residues</option>
@@ -203,6 +203,12 @@
                     Loading alignment-structure mapping <img src="static/img/loading.gif" alt="Loading topology viewer" style="height:25px;">
                 </div>
                 <div id="topview"></div>
+            </span>
+            <span id="topif_duplicate" v-if="chainid.length>0||customPDBsuccess">
+                <div v-if="!topology_loaded">
+                    Loading alignment-structure mapping <img src="static/img/loading.gif" alt="Loading topology viewer" style="height:25px;">
+                </div>
+                <div id="topview_duplicate"></div>
             </span>
         </div>
         <div class = "gradient_section" v-if = "topology_loaded">
@@ -360,6 +366,8 @@
             } else {
                 const topview_item = document.getElementById("topview");
                 if (topview_item) {topview_item.remove(); create_deleted_element("topif", "topview", "Loading Structure Data ", true)}
+                const topview_item_duplicate = document.getElementById("topview_duplicate");
+                if (topview_item_duplicate) {topview_item_duplicate.remove(); create_deleted_element("topif_duplicate", "topview_duplicate", "Loading Structure Data ", true)}
             }
         },customPDBsuccess:function(successPost){
             if (successPost){
@@ -711,6 +719,8 @@
             if (chainid.length > 1){this.chainid = chainid[0];}
             const topview_item = document.getElementById("topview");
             if (topview_item) {topview_item.remove(); create_deleted_element("topif", "topview", "")}
+            const topview_item_duplicate = document.getElementById("topview_duplicate");
+            if (topview_item_duplicate) {topview_item_duplicate.remove(); create_deleted_element("topif_duplicate", "topview_duplicate", "")}
             var minIndex = String(0)
             var maxIndex = String(100000)
             var pdblower = pdbid.toLocaleLowerCase();
@@ -764,13 +774,17 @@
                     }
                     var topology_viewer = `<pdb-topology-viewer id="PdbeTopViewer" entry-id=${pdbid} entity-id=${entityid} chain-id=${chainid} filter-range=${mapping}></pdb-topology-viewer>`
                     document.getElementById('topview').innerHTML = topology_viewer;
+                    document.getElementById('topview_duplicate').innerHTML = topology_viewer.replace('PdbeTopViewer', 'PdbeTopViewer_duplicate');
                     window.viewerInstanceTop = document.getElementById("PdbeTopViewer");
+                    window.viewerInstanceTop_duplicate = document.getElementById("PdbeTopViewer_duplicate");
                 }).catch(error => {
                     if (vm.topology_loaded&&vm.topology_loaded!='error'){return;}
                     mapping = [range_string.split("-")[0],range_string.split("-")[1]];
                     var topology_viewer = `<pdb-topology-viewer id="PdbeTopViewer" entry-id=${pdbid} entity-id=${entityid} chain-id=${chainid} filter-range=${mapping}></pdb-topology-viewer>`
                     document.getElementById('topview').innerHTML = topology_viewer;
+                    document.getElementById('topview_duplicate').innerHTML = topology_viewer.replace('PdbeTopViewer', 'PdbeTopViewer_duplicate');
                     window.viewerInstanceTop = document.getElementById("PdbeTopViewer");
+                    window.viewerInstanceTop_duplicate = document.getElementById("PdbeTopViewer_duplicate");
                     console.log(error);
                 });
             }).catch(error => {
@@ -857,6 +871,8 @@
         },postStructureData(pdbid, chainid) {
             const topview_item = document.getElementById("topview");
             if (topview_item) {topview_item.remove(); create_deleted_element("topif", "topview", "Loading Structure Data ", true)}
+            const topview_item_duplicate = document.getElementById("topview_duplicate");
+            if (topview_item_duplicate) {topview_item_duplicate.remove(); create_deleted_element("topif_duplicate", "topview_duplicate", "Loading Structure Data ", true)}
             let tempEntities = this.chains.filter(obj => {
                 return obj["value"] == chainid;
             });

@@ -76,46 +76,50 @@ function isCorrectMask(mask_range){
   };
 
 function initializeMaskedArray() {
-    var topviewer = document.getElementById("PdbeTopViewer");
-    var masked_array = [];
-    var j = 0;
-    while(j < mapped_aa_properties.get(topviewer.pluginInstance.domainTypes[4].label).length) {
-        masked_array[j] = false;
-        var i = 0;
-        while(i < window.masking_range_array.length && !masked_array[j]) {
-            if(j >= window.masking_range_array[i] && j <= window.masking_range_array[i + 1]) {
-                masked_array[j] = true;
+    ["PdbeTopViewer", "PdbeTopViewer_duplicate"].forEach(id => {
+        var topviewer = document.getElementById(id);
+        var masked_array = [];
+        var j = 0;
+        while(j < mapped_aa_properties.get(topviewer.pluginInstance.domainTypes[4].label).length) {
+            masked_array[j] = false;
+            var i = 0;
+            while(i < window.masking_range_array.length && !masked_array[j]) {
+                if(j >= window.masking_range_array[i] && j <= window.masking_range_array[i + 1]) {
+                    masked_array[j] = true;
+                }
+                i = i+2;
             }
-            i = i+2;
+            j = j+1;
         }
-        j = j+1;
-    }
+    });
     return masked_array;
 };
 
 function handleMaskingRanges(mask_range){
   vm.masking_range = mask_range;
   window.masking_range_array = null;
-  if (isCorrectMask(mask_range)) {   
-      var topviewer = document.getElementById("PdbeTopViewer");
-      topviewer.pluginInstance.getAnnotationFromRibovision(mapped_aa_properties);   
-      if(window.custom_prop) {
-          topviewer.pluginInstance.getAnnotationFromRibovision(window.custom_prop); 
-      }
-      window.masked_array = initializeMaskedArray();          
-      var selectedIndex = topviewer.pluginInstance.targetEle.querySelector('.menuSelectbox').selectedIndex;
-
-      var index = 1;
-      while(index < topviewer.pluginInstance.domainTypes.length) {
-          colorResidue(index, window.masked_array);
-          index++;
-      }
-      let selectedData = topviewer.pluginInstance.domainTypes[selectedIndex]
-      
-      if (selectedData.data){
+  if (isCorrectMask(mask_range)) {
+      ["PdbeTopViewer", "PdbeTopViewer_duplicate"].forEach(id => {
+        var topviewer = document.getElementById(id);
+        topviewer.pluginInstance.getAnnotationFromRibovision(mapped_aa_properties);   
+        if(window.custom_prop) {
+            topviewer.pluginInstance.getAnnotationFromRibovision(window.custom_prop); 
+        }
+        window.masked_array = initializeMaskedArray();          
+        var selectedIndex = topviewer.pluginInstance.targetEle.querySelector('.menuSelectbox').selectedIndex;
+  
+        var index = 1;
+        while(index < topviewer.pluginInstance.domainTypes.length) {
+            colorResidue(index, window.masked_array);
+            index++;
+        }
+        let selectedData = topviewer.pluginInstance.domainTypes[selectedIndex]
+        
+        if (selectedData.data){
           topviewer.pluginInstance.updateTheme(selectedData.data); 
           window.viewerInstance.visual.select({data: selectSections_RV1.get(selectedData.label), nonSelectedColor: {r:255,g:255,b:255}});
-          }
+       }
+      });
       vm.correct_mask = true;
   } else {
       vm.correct_mask = false;
@@ -144,50 +148,52 @@ function handleFilterRange(filter_range) {
         const temp_array = filter_range.split('-');
         if (Number(temp_array[0]) < Number(temp_array[1])){
             window.filterRange = temp_array.join(",");
-            var topviewer = document.getElementById("PdbeTopViewer");
-            var selectBoxOut = viewerInstanceTop.pluginInstance.targetEle.querySelector('.menuSelectbox');
-            var selectedIndexOut = indexMatchingText(selectBoxOut.options, vm.selected_property);
-            var coordURL = `https://coords.litemol.org/${vm.pdbid.toLowerCase()}/residueRange?entityId=${topviewer.entityId}&authAsymId=${topviewer.chainId}&range=${filter_range}&encoding=bcif`
-            //var coordURL = `https://www.ebi.ac.uk/pdbe/coordinates/${window.pdblower}/residueRange?entityId=${topviewer.entityId}&range=${filter_range}&encoding=bcif`
-            topviewer.pluginInstance.getAnnotationFromRibovision(mapped_aa_properties);   
-            viewerInstance.visual.update({
-                customData: {
-                    url: coordURL,
-                    format: 'cif',
-                    binary:true },
-                assemblyId: '1',
-                subscribeEvents: true,
-                bgColor: {r:255,g:255,b:255},
-            });
-            viewerInstance.events.loadComplete.subscribe(() => { 
-                if(!vm.selected_property){return;}
-                let rangeArr = window.filterRange.split(',');
-                let selectBox = viewerInstanceTop.pluginInstance.targetEle.querySelector('.menuSelectbox');
-                let selectedIndex = indexMatchingText(selectBox.options, vm.selected_property);
-                let selectedData = topviewer.pluginInstance.domainTypes[selectedIndex];
-                if(selectSections_RV1.get(selectedData.label)) {
-                    var select_sections = selectSections_RV1.get(selectedData.label).filter(resi3D  => {
-                        if (resi3D.start_residue_number >= Number(rangeArr[0]) && resi3D.start_residue_number <= Number(rangeArr[1])){
-                            return resi3D;
-                        }
-                    })
-                    window.viewerInstance.visual.select({
-                    data: select_sections,
-                    nonSelectedColor: {r:255,g:255,b:255}});
+            ["PdbeTopViewer", "PdbeTopViewer_duplicate"].forEach(id => {
+                var topviewer = document.getElementById(id);
+                var selectBoxOut = viewerInstanceTop.pluginInstance.targetEle.querySelector('.menuSelectbox');
+                var selectedIndexOut = indexMatchingText(selectBoxOut.options, vm.selected_property);
+                var coordURL = `https://coords.litemol.org/${vm.pdbid.toLowerCase()}/residueRange?entityId=${topviewer.entityId}&authAsymId=${topviewer.chainId}&range=${filter_range}&encoding=bcif`
+                //var coordURL = `https://www.ebi.ac.uk/pdbe/coordinates/${window.pdblower}/residueRange?entityId=${topviewer.entityId}&range=${filter_range}&encoding=bcif`
+                topviewer.pluginInstance.getAnnotationFromRibovision(mapped_aa_properties);   
+                viewerInstance.visual.update({
+                    customData: {
+                        url: coordURL,
+                        format: 'cif',
+                        binary:true },
+                    assemblyId: '1',
+                    subscribeEvents: true,
+                    bgColor: {r:255,g:255,b:255},
+                });
+                viewerInstance.events.loadComplete.subscribe(() => { 
+                    if(!vm.selected_property){return;}
+                    let rangeArr = window.filterRange.split(',');
+                    let selectBox = viewerInstanceTop.pluginInstance.targetEle.querySelector('.menuSelectbox');
+                    let selectedIndex = indexMatchingText(selectBox.options, vm.selected_property);
+                    let selectedData = topviewer.pluginInstance.domainTypes[selectedIndex];
+                    if(selectSections_RV1.get(selectedData.label)) {
+                        var select_sections = selectSections_RV1.get(selectedData.label).filter(resi3D  => {
+                            if (resi3D.start_residue_number >= Number(rangeArr[0]) && resi3D.start_residue_number <= Number(rangeArr[1])){
+                                return resi3D;
+                            }
+                        })
+                        window.viewerInstance.visual.select({
+                        data: select_sections,
+                        nonSelectedColor: {r:255,g:255,b:255}});
+                    }
+                    if (selectedIndex > 0){
+                        var selectedDomain = topviewer.pluginInstance.domainTypes[selectedIndex];
+                        topviewer.pluginInstance.updateTheme(selectedDomain.data);
+                    }
+                    selectBox.selectedIndex = selectedIndex;
+                });
+                topviewer.pluginInstance.alreadyRan = false;
+                topviewer.pluginInstance.initPainting(window.select_sections)
+                let selectedData = topviewer.pluginInstance.domainTypes[selectedIndexOut];
+                topviewer.pluginInstance.getAnnotationFromRibovision(mapped_aa_properties);   
+                if(selectedIndexOut > 0) {
+                    topviewer.pluginInstance.updateTheme(selectedData.data);
                 }
-                if (selectedIndex > 0){
-                    var selectedDomain = topviewer.pluginInstance.domainTypes[selectedIndex];
-                    topviewer.pluginInstance.updateTheme(selectedDomain.data);
-                }
-                selectBox.selectedIndex = selectedIndex;
             });
-            topviewer.pluginInstance.alreadyRan = false;
-            topviewer.pluginInstance.initPainting(window.select_sections)
-            let selectedData = topviewer.pluginInstance.domainTypes[selectedIndexOut];
-            topviewer.pluginInstance.getAnnotationFromRibovision(mapped_aa_properties);   
-            if(selectedIndexOut > 0) {
-                topviewer.pluginInstance.updateTheme(selectedData.data);
-            }
             if(vm.correct_mask){
                 handleMaskingRanges(vm.masking_range)
             }
@@ -233,21 +239,23 @@ function clearInputFile(f){
 
 function cleanCustomMap(checked_customMap){
     if (vm.uploadSession){return;}
-    var topviewer = document.getElementById("PdbeTopViewer");
-    if (!topviewer || !topviewer.pluginInstance.domainTypes){
-        if (checked_customMap){return;}
-        var sliceAvailProp = Array.prototype.slice.call(vm.available_properties).filter(availProp => {
-            return vm.custom_headers.includes(availProp.Name)
+    ["PdbeTopViewer", "PdbeTopViewer_duplicate"].forEach(id => {
+        var topviewer = document.getElementById(id);
+        if (!topviewer || !topviewer.pluginInstance.domainTypes){
+            if (checked_customMap){return;}
+            var sliceAvailProp = Array.prototype.slice.call(vm.available_properties).filter(availProp => {
+                return vm.custom_headers.includes(availProp.Name)
+            })
+            const setSlice = new Set(sliceAvailProp.map(a=>{return a.Name}));
+            const newArray = vm.available_properties.filter(obj => !setSlice.has(obj.Name));
+            vm.available_properties = newArray;
+            return;
+        }
+        var selectBoxEle = topviewer.pluginInstance.targetEle.querySelector('.menuSelectbox');
+        topviewer.pluginInstance.domainTypes = topviewer.pluginInstance.domainTypes.filter(obj => {
+            return !vm.custom_headers.includes(obj.label)
         })
-        const setSlice = new Set(sliceAvailProp.map(a=>{return a.Name}));
-        const newArray = vm.available_properties.filter(obj => !setSlice.has(obj.Name));
-        vm.available_properties = newArray;
-        return;
-    }
-    var selectBoxEle = topviewer.pluginInstance.targetEle.querySelector('.menuSelectbox');
-    topviewer.pluginInstance.domainTypes = topviewer.pluginInstance.domainTypes.filter(obj => {
-        return !vm.custom_headers.includes(obj.label)
-    })
+    });
     
     var sliceChildren = Array.prototype.slice.call(selectBoxEle.childNodes).filter(optionsNode => {
         return vm.custom_headers.includes(optionsNode.label)
@@ -337,16 +345,18 @@ function cleanFilter(checked_filter, masking_range){
   window.masked_array = [];
   vm.masking_range = null;
   vm.correct_mask = null;
-  var topviewer = document.getElementById("PdbeTopViewer");
-  topviewer.pluginInstance.getAnnotationFromRibovision(mapped_aa_properties);
-  if(window.custom_prop) {
-      topviewer.pluginInstance.getAnnotationFromRibovision(window.custom_prop);
-  }
-  var selectedIndex = topviewer.pluginInstance.targetEle.querySelector('.menuSelectbox').selectedIndex;
-  if (selectedIndex > 0){
-    topviewer.pluginInstance.updateTheme(topviewer.pluginInstance.domainTypes[selectedIndex].data); 
-  }
-  window.viewerInstance.visual.select({data: selectSections_RV1.get(topviewer.pluginInstance.domainTypes[selectedIndex].label), nonSelectedColor: {r:255,g:255,b:255}});
+  ["PdbeTopViewer", "PdbeTopViewer_duplicate"].forEach(id => {
+    var topviewer = document.getElementById();
+    topviewer.pluginInstance.getAnnotationFromRibovision(mapped_aa_properties);
+    if(window.custom_prop) {
+        topviewer.pluginInstance.getAnnotationFromRibovision(window.custom_prop);
+    }
+    var selectedIndex = topviewer.pluginInstance.targetEle.querySelector('.menuSelectbox').selectedIndex;
+    if (selectedIndex > 0){
+      topviewer.pluginInstance.updateTheme(topviewer.pluginInstance.domainTypes[selectedIndex].data); 
+    }
+    window.viewerInstance.visual.select({data: selectSections_RV1.get(topviewer.pluginInstance.domainTypes[selectedIndex].label), nonSelectedColor: {r:255,g:255,b:255}});
+  });
 };
 function cleanSelection(checked_selection, filter_range){
   if (checked_selection || filter_range == null || !vm.pdbid){return;}
@@ -590,7 +600,7 @@ function handlePermutation(checked_permutation) {
         // indices = '1-3, 5-8, 20-25';
         indices = permutation_indices;
         ajax(url_name, {indices, customFasta/*, permutation_index*/}).then(data => {
-            
+            let x = 0;
         });
         // if (indices) {
         //     ajax(url_name, {indices, customFasta}).then(data => {

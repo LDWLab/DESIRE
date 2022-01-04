@@ -254,6 +254,7 @@ var cleanupOnNewAlignment = function (vueObj, aln_text='') {
     const menu_item = document.querySelector(".smenubar");
     const aln_item = document.getElementById("alnDiv");
     const topview_item = document.getElementById("topview");
+    const topview_item_duplicate = document.getElementById("topview_duplicate");
     const molstar_item = document.getElementById("pdbeMolstarView");
     const pdb_input = document.getElementById("pdb_input");
     if (menu_item) {menu_item.remove();}
@@ -316,6 +317,7 @@ var cleanupOnNewAlignment = function (vueObj, aln_text='') {
     if (vueObj.checked_customMap) {vueObj.checked_customMap = false;}
     if (vueObj.csv_data) {vueObj.csv_data = null;}
     if (topview_item) {topview_item.remove(); create_deleted_element("topif", "topview", "Select new chain!")}
+    if (topview_item_duplicate) {topview_item_duplicate.remove(); create_deleted_element("topif_duplicate", "topview", "Select new chain!")}
     if (molstar_item) {molstar_item.remove(); create_deleted_element("molif", "pdbeMolstarView", "Select new structure!")}
 };
 
@@ -604,19 +606,21 @@ var build_mapped_props = function(mapped_props, twcDataUnmapped, structure_mappi
 }
 
 var mapTWCdata = function (structMap, twcDataUnmapped, mapped_aa_properties){
-    var topviewer = document.getElementById("PdbeTopViewer");
-    mapped_aa_properties = build_mapped_props(mapped_aa_properties, twcDataUnmapped, structMap);
-    window.mapped_aa_properties = mapped_aa_properties;
-    if (topviewer != null && topviewer.pluginInstance.domainTypes != undefined){
-        var empty_props = new Map();
-        let twc_props = build_mapped_props(empty_props, twcDataUnmapped, structMap);
-        topviewer.pluginInstance.getAnnotationFromRibovision(twc_props);
-        var selectBoxEle = topviewer.pluginInstance.targetEle.querySelector('.menuSelectbox');
-        var twc_option = document.createElement("option");
-        twc_option.setAttribute("value", selectBoxEle.options.length);
-        twc_option.appendChild(document.createTextNode("TwinCons"));
-        selectBoxEle.appendChild(twc_option);
-    }
+    ["PdbeTopViewer", "PdbeTopViewer_duplicate"].forEach(id => {
+        var topviewer = document.getElementById(id);
+        mapped_aa_properties = build_mapped_props(mapped_aa_properties, twcDataUnmapped, structMap);
+        window.mapped_aa_properties = mapped_aa_properties;
+        if (topviewer != null && topviewer.pluginInstance.domainTypes != undefined){
+            var empty_props = new Map();
+            let twc_props = build_mapped_props(empty_props, twcDataUnmapped, structMap);
+            topviewer.pluginInstance.getAnnotationFromRibovision(twc_props);
+            var selectBoxEle = topviewer.pluginInstance.targetEle.querySelector('.menuSelectbox');
+            var twc_option = document.createElement("option");
+            twc_option.setAttribute("value", selectBoxEle.options.length);
+            twc_option.appendChild(document.createTextNode("TwinCons"));
+            selectBoxEle.appendChild(twc_option);
+        }
+    });
 }
 
 var fetchTWCdata = function (fasta){

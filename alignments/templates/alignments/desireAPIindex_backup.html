@@ -37,24 +37,6 @@
 		let proteinTypes = [];
 		let selectedProteinType = null;
 		let url = null;
-		// function ajax(url, data = null) {
-			// if (data == null) {
-			// 	$.ajax({
-			// 		"url": url,
-			// 		"dataType": "json",
-			// 		"type": "POST",
-			// 		"data": data,
-            //     	"headers": {'X-CSRFToken': csrftoken},
-			// 		""
-			// 	});
-			// } else {
-			// 	$.ajax({
-			// 		"url": url,
-			// 		"dataType": "json",
-			// 		"type": "GET"
-			// 	});
-			// }
-		// }
 		function clearSelect(selectElement) {
 			let numSelectOptions = selectElement.length;
 			for (let i = numSelectOptions - 1; i >= 0; i--) {
@@ -116,33 +98,6 @@
 <body>
 	<div class = "gridContainer">
 		<div class = "gridEle" id = 'Nomenclature'>Alignment
-			<!-- <table style="width:100%">
-				<tr>
-					<td>
-						Protein #
-						<input type="text" id = "protein_entry"/>
-					</td>
-					<td>
-						Integer
-					</td>
-					<td>
-						Enter an integer representing the protein, i.e. 2 for uL02. 
-					</td>
-				</tr>
-				<tr>
-					<td>
-						TaxID
-						<input type="text" id = "taxID_entry"/>
-					</td>
-					<td>
-						Integer
-					</td>
-					<td>
-						Enter the taxonomy id. This is 2 for bacteria, 2157 for archaea, and 2759 for eukarya. 
-					</td>
-				</tr>
-			</table>
-			<button type="button" onclick = "displayData('ortholog-aln-api', document.getElementById('protein_entry').value, document.getElementById('taxID_entry').value)">Enter</button> -->
 			<table style="width:100%">
 				<div id="tax_selection">
 					<tr>
@@ -180,21 +135,6 @@
 					</td>
 				</tr>
 			</table>
-			<!-- <table style="width:100%">
-				<tr>
-					<td>
-						<input type="checkbox" id="b_checkbox_2" onclick="if (this.checked) {taxID = document.getElementById('tax_selection').value=2; getProteinTypes(); } else { clearSelect(document.getElementById('protein_type')); clearSelect(document.getElementById('alignment_name')); }">Bacteria
-						<input type="checkbox" id="a_checkbox_2" onclick="">Archaea
-						<input type="checkbox" id="e_checkbox_2" onclick="">Eukarya
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<ul id="available_protein_types">
-						</ul>
-					</td>
-				</tr>
-			</table> -->
 			<p id="url_display"></p>
 			<button type="button" onclick="let alignmentNameSelector = document.getElementById('alignment_name'); displayData('ortholog-aln-api', document.getElementById('protein_type').value, alignmentNameSelector[alignmentNameSelector.selectedIndex].text, document.getElementById('tax_selection').value)">Enter</button>
 		</div>

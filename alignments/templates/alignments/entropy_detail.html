@@ -27,6 +27,7 @@
 </head>
 <body>
 	<div id='topview'></div>
+	<div id='topview_duplicate'></div>
 	<div>
 		{%for pos in shannon_dictionary%}
 			<li>{{pos}}</li>
@@ -43,6 +44,7 @@
 				var entityid = Object.keys(data[pdblower])[0];
 				var topology_viewer = "<pdb-topology-viewer entry-id={{pdbid}} entity-id="+entityid+" chain-id=AI	entropy-id={{entropy_address}}></pdb-topology-viewer>"
 				document.getElementById('topview').innerHTML = topology_viewer;
+				document.getElementById('topview_duplicate').innerHTML = topology_viewer.replace('PdbeTopViewer', 'PdbeTopViewer_duplicate');
 			} else {
 				console.log('error');
 			}

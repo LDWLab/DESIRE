@@ -365,15 +365,17 @@
               placement: 'left'
             },
             before: type => new Promise((resolve, reject) => {
-                var topviewer = document.getElementById("PdbeTopViewer");
-                var annotationSelect = document.querySelector(".menuSelectbox");
-                var exampleData = topviewer.pluginInstance.domainTypes[4];
-                resolve (
-                    vm.selected_property = "Polarity",
-                    topviewer.pluginInstance.updateTheme(exampleData.data),
-                    window.viewerInstance.visual.select({data: selectSections_RV1.get(exampleData.label), nonSelectedColor: {r:255,g:255,b:255}}),
-                    annotationSelect.selectedIndex=4,
-                )
+                ["PdbeTopViewer", "PdbeTopViewer_duplicate"].forEach(id => {
+                    var topviewer = document.getElementById(id);
+                    var annotationSelect = document.querySelector(".menuSelectbox");
+                    var exampleData = topviewer.pluginInstance.domainTypes[4];
+                    resolve (
+                        vm.selected_property = "Polarity",
+                        topviewer.pluginInstance.updateTheme(exampleData.data),
+                        window.viewerInstance.visual.select({data: selectSections_RV1.get(exampleData.label), nonSelectedColor: {r:255,g:255,b:255}}),
+                        annotationSelect.selectedIndex=4,
+                    )
+                });
             })
         },{
             target: '.gradient_section',
@@ -532,6 +534,7 @@
                     vm.cleanTreeOpts(),
                     document.getElementById("pdbeMolstarView").textContent = null,
                     document.getElementById("topview").textContent = null,
+                    document.getElementById("topview_duplicate").textContent = null,
                     vm.topology_loaded = false,
                 )
             })

@@ -1,0 +1,126 @@
+<html>
+	<head>
+		{% csrf_token %}
+		{% load static %}
+
+		<!-- Support scripts for RV3 -->
+		<!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script type="text/javascript" src={% static 'alignments/RV3_before.js' %}></script>
+		<script type="text/javascript" src={% static 'alignments/API_helper.js' %}></script>
+		<script>
+			var
+				selectedPhylogeneticGroups = new Set(),
+				alignmentUrl = "";
+
+			function toggle(phylogeneticIndex, checkedFlag) {
+				if (checkedFlag) {
+					selectedPhylogeneticGroups.add(phylogeneticIndex);
+				} else {
+					selectedPhylogeneticGroups.delete(phylogeneticIndex);
+				}
+			}
+			function clearSelect(selectId) {
+				let
+					selectElement = document.getElementById(selectId);
+					numSelectOptions = selectElement.length;
+				for (let i = numSelectOptions - 1; i >= 0; i--) {
+					selectElement[i] = null;
+				}
+				return selectElement;
+			}
+
+			function combine(url, additiveFlag=true) {
+				let
+					resultsIntersection = [];
+				ajax(url).then(results => {
+					let
+						foo = 0;
+				});
+				return resultsIntersection;
+				// ajax(url).then(results => {
+				// 	let foo = 0;
+					// results = results['results'];
+					// let
+					// 	resultsIntersection = null;
+					// if (additiveFlag) {
+					// 	resultsIntersection = new Set();
+					// 	results.forEach(resultsSublist => resultsSublist.forEach(result => resultsIntersection.add(result)));
+					// } else {
+					// 	resultsIntersection = results[0];
+					// 	for (let i = 1; i < results.length; i++) {
+					// 		let
+					// 			resultsI = results[i],
+					// 			newIntersection = [];
+					// 		resultsIntersection.forEach(resultsIntersectionEntry => resultsI.forEach(resultsIEntry => {
+					// 			if (resultsIntersectionEntry[0] == resultsIEntry[0]) {
+					// 				newIntersection.push(resultsIntersectionEntry);
+					// 			}
+					// 		}));
+					// 		resultsIntersection = newIntersection;
+					// 	}
+					// }
+					// return resultsIntersection;
+				// });
+			}
+
+			function populateSelect(selectId, entries) {
+				let
+					selectElement = clearSelect(selectId),
+					index = 0;
+				entries.forEach(result => selectElement[index++] = new Option(result));
+			}
+			function getProteinTypes() {
+				populateSelect('moleculeGroupSelect', combine('/proteinTypes/' + Array.from(selectedPhylogeneticGroups).join(','), true));
+			}
+			function getAlignments() {
+				let
+					selectedGroups = [];
+				Array.from(document.getElementById('0.moleculeGroupSelect').selectedOptions).forEach(option => selectedGroups.push(option.value));
+				populateSelect('alignmentSelect', combine('/getAlignmentsFilterByProteinTypeAndTaxIds/' + selectedGroups.join(',') + '/' + Array.from(selectedPhylogeneticGroups).join(','), false));
+			}
+			// ajax('/getAlignmentsFilterByProteinType/LSU').then(results => {
+			// 	let
+			// 		foo = 0;
+			// });
+			ajax('/allProteinTypes').then(allProteinTypes => {
+				let
+					proteinTypesSelect = document.getElementById('1.proteinTypesSelect'),
+					i = 0;
+				allProteinTypes['allProteinTypes'].forEach(proteinType => proteinTypesSelect[i++] = new Option(proteinType));
+			});
+		</script>
+		<title>DESIRE API</title>
+	</head>
+	<body>
+		<input type="checkbox" id="bacteria_checkbox" onclick="toggle(2, this.checked); getProteinTypes();">Bacteria</input>
+		<input type="checkbox" id="eukarya_checkbox" onclick="toggle(2759, this.checked); getProteinTypes();">Eukarya</input>
+		<input type="checkbox" id="archaea_checkbox" onclick="toggle(2157, this.checked); getProteinTypes();">Archaea</input>
+
+		<br>
+		Molecule Type:
+		<br>
+		<select id="0.moleculeGroupSelect" onfocus="this.selectedIndex = -1;" onchange="getAlignments();" multiple></select>
+		<br>
+		Alignment:
+		<br>
+		<select id="0.alignmentSelect" onfocus="this.selectedIndex = -1;" onchange="let selectedGroups = []; Array.from(document.getElementById('0.moleculeGroupSelect').selectedOptions).forEach(option => selectedGroups.push(option.value)); document.getElementById('url_display').innerHTML = 'http:/127.0.0.1:8000/' + (alignmentUrl = String(['ortholog-aln-api', selectedGroups.join(','), this[this.selectedIndex].value.split(',')[0], Array.from(selectedPhylogeneticGroups).join(',')].join('/')))"></select>
+		<button onclick="ajax(alignmentUrl).then(data => document.getElementById('projectInfo').textContent = data.Alignment)">Get Alignment</button>
+		<p id="url_display"></p>
+		<pre id="projectInfo"></pre>
+		<br>
+		Select a protein type:
+		<br>
+		<select id="1.proteinTypesSelect" onfocus="this.selectedIndex=-1;" onchange="let selectedMoleculeGroups=[]; Array.from(this.selectedOptions).forEach(selectedOption => selectedMoleculeGroups.push(selectedOption.value)); populateSelect('1.alignmentsSelect', combine('/getAlignmentsFilterByProteinType/' + selectedMoleculeGroups.join(','), true));"></select>
+		<br>
+		Select an alignment:
+		<br>
+		<select id="1.alignmentsSelect" onfocus="this.selectedIndex=-1;" onchange=""></select>
+		<br>
+		Select two species:
+		<br>
+		<select id="1.taxIdSelect.0"></select>
+		<select id="1.taxIdSelect.1"></select>
+	</body>
+</html>
+
