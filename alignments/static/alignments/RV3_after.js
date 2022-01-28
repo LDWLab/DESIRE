@@ -398,7 +398,7 @@ var populatePDBs = function (alndata){
                 ajax(riboXYZurl).then(data => {
                     var pdb_entries = []
                     data.forEach(function(entry){
-                        let pdb_text = `${entry.parent_rcsb_id} ${entry.rcsb_source_organism_description[0]}`
+                        let pdb_text = `${entry.parent_rcsb_id} ${entry.src_organism_names[0]}`
                         let pdbxDescription = entry.rcsb_pdbx_description.trim().replace(/-[\w]{1}$/,'').replace(/ubiquitin/ig,'')
                         if (polNames.includes(pdbxDescription)){
                             pdb_entries.push({id: entry.parent_rcsb_id.toLowerCase(), name:pdb_text})
