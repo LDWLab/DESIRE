@@ -892,7 +892,10 @@ def permutation_data(request, aln_id, tax_group):
             for indexPair in indexPairs:
                 indexPair = indexPair.split('-')
                 column_index_0 = int(indexPair[0]) - 1
-                column_index_1 = int(indexPair[1])
+                if len(indexPair) == 1:
+                    column_index_1 = column_index_0 + 1
+                else:
+                    column_index_1 = int(indexPair[1])
                 if 0 <= column_index_0 < column_index_1:
                     valid_index_pair_flag = True
                     for row_index in row_range:
@@ -975,7 +978,7 @@ def permutation_data(request, aln_id, tax_group):
 
     now = datetime.datetime.now()
     fileNameSuffix = "_" + str(now.year) + "_" + str(now.month) + "_" + str(now.day) + "_" + str(now.hour) + "_" + str(now.minute) + "_" + str(now.second) + "_" + str(now.microsecond)
-    alignmentFilePath = "./static/permuted_alignment" + fileNameSuffix + ".fasta"
+    # alignmentFilePath = "./static/permuted_alignment" + fileNameSuffix + ".fasta"
 
     # hhblits
     # command: /usr/local/bin/hh-suite/bin/hhsearch -i /home/blastdb/alignments/beta_barrels/OB_aIF1.fa -d /home/blastdb/ecod_F_fasta/ecod215/ecod215_numk3 -maxres 550000 -o OB_aIF1.txt -M 50 -add_cons
@@ -983,15 +986,15 @@ def permutation_data(request, aln_id, tax_group):
     # Convert to standard JSON:
     # NOTE: add any installed prerequisites to the README.md (/DESIRE/README.md)
 
-    fh = open(alignmentFilePath, "w")
-    fh.write(permutation_string)
-    fh.close()
+    # fh = open(alignmentFilePath, "w")
+    # fh.write(permutation_string)
+    # fh.close()
 
-    hhsearchOutputFilePath = './static/test.hhr' + fileNameSuffix
-    hhsearch(alignmentFilePath, '/home/blastdb/ecod_F_fasta/ecodFam', hhsearchOutputFilePath, 550000, 50, False, True)
+    # hhsearchOutputFilePath = './static/test.hhr' + fileNameSuffix
+    # hhsearch(alignmentFilePath, '/home/blastdb/ecod_F_fasta/ecodFam', hhsearchOutputFilePath, 550000, 50, False, True)
 
-    os.remove(alignmentFilePath)
-    os.remove(hhsearchOutputFilePath)
+    # os.remove(alignmentFilePath)
+    # os.remove(hhsearchOutputFilePath)
 
     # response = HttpResponse(permutation_string, content_type="text/plain")
     response = JsonResponse(permutation_string, safe = False)
@@ -1075,7 +1078,6 @@ def testHMMCode(request):
     parsed = parse_hh_output(hhalign_output_file_path)
     hhsearch_output_file_path = './static/b.hhr'
     parsed = parse_hh_output(hhsearch_output_file_path)
-    x = 0
 
 def propensities(request, align_name, tax_group):
     aln_id = Alignment.objects.filter(name = align_name)[0].aln_id

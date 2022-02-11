@@ -135,6 +135,22 @@
                         </button></p>
                     </div>
                 </p></div>
+                <section><div class="checkbox" id="calculatePermutation">
+                    <label><input type="checkbox" v-model="checked_permutation" v-on:change="populateMSAIndices(checked_permutation)">Calculate MSA Permutation</label>
+                    <div v-show="checked_permutation">
+                        <section style="color:red;">Usage:</section>
+                        <section>MSA indices (e.g. 100-120, 90-95)</section>
+                        <section>Input permutation indices:<input text="text" id="permutation_indices" v-on:change="validatePermutationIndices()"></section>
+                        <select class="btn btn-outline-dark dropdown-toggle" id="permutationSubstructure" v-if="checked_permutation&&structure_mapping">
+                            <option :value="null" selected disabled hidden>Select secondary structure</option>
+                            <option :value="0">All residues</option>
+                            <option v-for="substructure in substructures" v-bind:value="{ id: substructure.value, text: substructure.text, indices: substructure.indices }">{{ substructure.text }}</option>
+                        </select>
+                        <button id="downloadPermutationButton" v-on:click="handlePermutation()">Download permutated alignment</button>
+                        <label id="invalidPermutationIndicesMessage" style="color:red;display:none;">Invalid indices!</label>
+                        <a id="downloadPermutationAnchor" style="display:none;"></a>
+                    </div>
+                </div></section>
             </div>
             <p><div v-if="alnobj" class="checkbox" id="showFrequencies">
                 <label><input type="checkbox" v-model="checked_propensities" v-on:change="handlePropensities(checked_propensities)">
@@ -147,16 +163,6 @@
                 <p><button id="downloadFreqsBtn" class="btn btn-outline-dark" style="margin: 3% 0;" v-if="checked_propensities" type="button" v-on:click="downloadFreqsData()">
                     Download AA frequencies
                 </button></p>
-            </div></p>
-            <p><div v-if="true" class="checkbox" id="calculatePermutation">
-                <label><input type="checkbox" v-model="checked_permutation" v-on:change="handlePermutation(checked_permutation)">
-                Calculate Permutation</label>
-                <p>Input Permutation indices:<input text="text" id="permutation_indices"></p>
-                <select class="btn btn-outline-dark dropdown-toggle" id="permutationSubstructure" v-if="checked_permutation&&structure_mapping" v-model="property" v-on:change=" getPropensities(property); handlePermutation(checked_permutation)">
-                    <option :value="null" selected disabled hidden>Select secondary structure</option>
-                    <option :value="0">All residues</option>
-                    <option v-for="substructure in substructures" v-bind:value="{ id: substructure.value, text: substructure.text, indices: substructure.indices }">{{ substructure.text }}</option>
-                </select>
             </div></p>
         </div>
         <div class="alignment_section">
@@ -891,8 +897,12 @@
             handleFilterRange(filter_range);
         },handlePropensities(checked_propensities){
             handlePropensities(checked_propensities);
-        },handlePermutation(checked_permutation){
-            handlePermutation(checked_permutation);
+        }, populateMSAIndices(permutation_checked){
+            populateMSAIndices(permutation_checked);
+        },validatePermutationIndices(){
+            validatePermutationIndices();
+        },handlePermutation(){
+            handlePermutation();
         },populatePDBs(alndata){
             populatePDBs(alndata);
         },populatePDBsFromCustomAln(firstSeq){
