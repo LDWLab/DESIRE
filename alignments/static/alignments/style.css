@@ -195,6 +195,13 @@
     float:left;
     position:relative;
   }
+
+  #topview_clone{
+    width: 500px;
+    height: 500px;
+    float:left;
+    position:relative;
+  }
   
   @-moz-document url-prefix() {
     .topoSvg{
@@ -209,6 +216,14 @@
     float:left;
     position:relative;
   }
+
+  #pdbeMolstarViewClone {
+    width: 500px;
+    height: 500px;
+    float:left;
+    position:relative;
+  }
+
   .svgSection{
     background-color: white;
   }

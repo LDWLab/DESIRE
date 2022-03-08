@@ -40,10 +40,21 @@
             "program": "${workspaceFolder}/populate_db/Alignments/upload_aln.py",
             "console": "integratedTerminal",
             "args": [
-                "${workspaceFolder}/populate_db/Alignments/missed_seqs/YERPE_bS21.fas",
-                "b",
-                "-aln_id", "122",
+                "${workspaceFolder}/Upload/uL24m.test_v2.fas",
+                "-schema", "DESIRE",
+                "bm",
                 "-commit"
+            ]
+        },
+        {
+            "name": "Parse accession",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/populate_db/Polymers/parse_accession.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a",
+                "~/Desktop/CPR_new/uL01.txt"
             ]
         },
         {
@@ -65,9 +76,9 @@
             "console": "integratedTerminal",
             "args": [
                 "~/Dropbox-Gatech/ProteinProject/Phylogeny/txid_e_new.txt",
+                "${workspaceFolder}/populate_db/Phylogeny/data/newEuk.json",
                 "ppenev",
-                "-pf", "${workspaceFolder}/populate_db/Phylogeny/data/newEuk.json",
-                "-schema", "SEREB",
+                "-schema", "DESIRE",
                 "-host", "130.207.36.76",
                 "-commit"
             ]

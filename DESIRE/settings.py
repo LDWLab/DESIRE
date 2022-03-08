@@ -92,7 +92,7 @@ WSGI_APPLICATION = 'DESIRE.wsgi.application'
 
 DATABASES = {
     'default': {
-        'NAME': 'SEREB',
+        'NAME': 'DESIRE',
         'ENGINE': 'mysql.connector.django',
         'USER': config['DB_USER_NAME'],             #Write username here
         'PASSWORD': config['DB_PASSWORD'],         #And password here

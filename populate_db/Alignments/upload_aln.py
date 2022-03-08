@@ -9,7 +9,7 @@ def create_and_parse_argument_options(argument_list):
     parser.add_argument('source', help='Defines superkingdom source (e.g. abe)', type=str)
     parser.add_argument('-aln_method','--alignment_method', help='Alignment method used (default: PROMALS3D)', type=str, default='PROMALS3D')
     parser.add_argument('-host','--db_host', help='Defines database host (default: 130.207.36.76)', type=str, default='130.207.36.76')
-    parser.add_argument('-schema','--db_schema', help='Defines schema to use (default: SEREB)', type=str, default='SEREB')
+    parser.add_argument('-schema','--db_schema', help='Defines schema to use (default: DESIRE)', type=str, default='DESIRE')
     parser.add_argument('-user_name','--uname', help='Defines user name to use (default: ppenev)', type=str, default='ppenev')
     parser.add_argument('-pw','--password', help='Defines user password to use', type=str)
     parser.add_argument('-aln_id','--alignment_id', help='Defines alignment id to add entries to. If not specified makes a new alignment entry.', type=int)
@@ -45,9 +45,9 @@ def check_nomo_id(cursor, occur, name):
     '''
     Gets nom_id for new name and superkingdom
     '''
-    occur = occur.capitalize() 
+    occur = occur.capitalize()
     cursor.execute("SELECT Nomenclature.nom_id FROM Nomenclature\
-        WHERE Nomenclature.new_name = '"+name+"' AND Nomenclature.occurrence = '"+occur+"'")
+        WHERE Nomenclature.new_name = '"+name+"' AND Nomenclature.PhylogeneticOccurrence = '"+occur+"'")
     result = cursor.fetchall()
     try:
         nom_id=result[0][0]
@@ -56,15 +56,15 @@ def check_nomo_id(cursor, occur, name):
         cursor.execute("SELECT Nomenclature.nom_id FROM Nomenclature\
             INNER JOIN Old_name ON Nomenclature.nom_id=Old_name.nn_fk_id\
             WHERE Old_name.old_name = '"+name+"' AND Old_name.N_B_Y_H_A = 'BAN'\
-            AND Nomenclature.occurrence = '"+occur+"'")
+            AND Nomenclature.PhylogeneticOccurrence = '"+occur+"'")
         result = cursor.fetchall()
         try:
             nom_id=result[0][0]
         except:
-            raise ValueError ("No result for nom_id "+name+" and occurrence "+occur+" in the MYSQL query!")
+            raise ValueError ("No result for name "+name+" and phylogenetic occurrence "+occur+" in the MYSQL query!")
     return nom_id
 
-def check_polymer(cursor, taxid, nomid):
+def check_polymer(cursor, taxid, nomid, gi):
     '''
     Gets polymer id for a given taxid and nomid (LDW-prot requirement)
     '''
@@ -72,13 +72,14 @@ def check_polymer(cursor, taxid, nomid):
                     INNER JOIN Polymer_metadata ON Polymer_Data.PData_id = Polymer_metadata.polymer_id WHERE \
                     Polymer_metadata.accession_type = 'LDW-prot' AND \
                     Polymer_Data.nomgd_id = "+nomid+" AND \
-                    Polymer_Data.strain_id = "+taxid)
+                    Polymer_Data.strain_id = "+taxid+" AND \
+                    Polymer_Data.GI = '"+gi+"'")
     result = cursor.fetchall()
     try:
         pol_id=result[0][0]
     except:
         pol_id = 'NOVAL'
-        print("No result for nomgd_id "+nomid+" and taxid "+taxid+" in the MYSQL query!")
+        print("No result for nomgd_id "+nomid+" and taxid "+taxid+" and gi "+gi+" in the MYSQL query!")
         #raise ValueError ("No result for nom_id "+nomid+" and taxid "+taxid+" in the MYSQL query!")
     return pol_id
 
@@ -111,6 +112,8 @@ def upload_pol_aln(cursor, pol_id, aln_id):
 def upload_aln_data(cursor, entry, seq_aln_pos, aln_id, polymer_id):
     '''Uploads aln_data table'''
     #print (entry.seq[seq_aln_pos[1]-1],end='')
+    # if str(seq_aln_pos[0]) == '1' and str(polymer_id) == '11090' and str(entry.seq[seq_aln_pos[1]-1]) == 'T':
+    #     flag = True
     resi_id = check_resi_id(cursor, str(seq_aln_pos[0]), str(polymer_id), str(entry.seq[seq_aln_pos[1]-1]))
     #print(resi_id)
     cursor.execute("SELECT aln_id,res_id FROM Aln_Data WHERE\
@@ -168,6 +171,7 @@ def check_resi_id(cursor, seqnum, polid, resname):
     query = "SELECT Residues.resi_id, Residues.unModResName FROM Residues WHERE \
             Residues.PolData_id = "+polid+" AND \
             Residues.resNum = "+seqnum
+    # print (query)
     cursor.execute(query)
     result = cursor.fetchall()
     try:
@@ -213,6 +217,7 @@ def main(commandline_arguments):
 
     alns = read_align(aln_path)
     aln_name = aln_path.split("/")[-1]\
+        .replace('.taxid_tagged.fa', '')\
         .replace('_txid_tagged_nucl.fas', '')\
         .replace('_txid_tagged.fas', '')\
         .replace('_new.fas', '')\
@@ -223,10 +228,15 @@ def main(commandline_arguments):
     else:
         aln_id = upaln_getid(cursor, aln_name, source_string, comm_args.alignment_method)
     for entry in alns:
-        taxid = fix_old_taxid(entry.id.split('_')[1])
+        entry_id_split = entry.id.split('_')
+        taxid = fix_old_taxid(entry_id_split[1])
         superK = superkingdom_info(cursor, taxid)
-        nom_id = check_nomo_id(cursor, superK[0], entry.id.split('_')[0][:4])
-        polymer_id = check_polymer(cursor, str(taxid),str(nom_id))
+        entry_id_split_2 = entry_id_split[2]
+        gi = entry_id_split_2[entry_id_split_2.index('|') + 1:]
+        # nom_id = check_nomo_id(cursor, superK[0], entry.id.split('_')[0][:4])
+        print ('entry.id: ' + str(entry.id))
+        nom_id = check_nomo_id(cursor, superK[0], entry.id.split('_')[0])
+        polymer_id = check_polymer(cursor, str(taxid),str(nom_id), gi)
         if polymer_id == 'NOVAL':
             continue
         upload_pol_aln(cursor, str(polymer_id), str(aln_id))

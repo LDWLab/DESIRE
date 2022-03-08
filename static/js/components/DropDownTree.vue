@@ -3,17 +3,21 @@
         <div class="left-sidebar">
             <div id="tree_type" class="btn-group btn-group-toggle" data-toggle="buttons">
                 
-                <label class="btn btn-outline-dark" style="margin: 0 1% 0 0;width:50%;" for="orthologs" >
-                    <input type="radio" id="orthologs" value="orth" v-model="type_tree" v-on:input="cleanTreeOpts()" checked>
+                <label class="btn btn-outline-dark" style="margin: 0 1% 0 0;width:32%; font-size:13;" for="orthologs" >
+                    <input type="radio" id="orthologs" value="orth" v-model="type_tree" v-on:input="cleanTreeOpts('orth')" checked>
                     DESIRE
                 </label>
                 <!--<label class="btn btn-outline-dark" for="paralogs">
                     <input type="radio" id="paralogs" value="para" v-model="type_tree" v-on:input="cleanTreeOpts()">
                     Paralogs
                 </label>-->
-                <label class="btn btn-outline-dark" style="margin: 0 0 0 1%;width:50%;" for="upload">
-                    <input type="radio" id="upload" value="upload" v-model="type_tree" v-on:input="cleanTreeOpts()">
+                <label class="btn btn-outline-dark" style="margin: 0 1% 0 1%;width:32%; font-size:13;" for="upload">
+                    <input type="radio" id="upload" value="upload" v-model="type_tree" v-on:input="cleanTreeOpts('upload')">
                     User upload
+                </label>
+                <label class="btn btn-outline-dark" style="margin: 0 0 0 1%;width:32%; font-size:13;" for="permutation">
+                    <input type="radio" id="permutation" value="perm" v-model="type_tree" v-on:input="cleanTreeOpts('perm')">
+                    Permute
                 </label>
             </div>
             <div id="treeselect" v-if="type_tree=='para'|type_tree=='orth'">
@@ -34,8 +38,8 @@
             <div v-else>
                 Select an alignment file:
                 <p><input id="inputUploadFasta" class="btn btn-outline-dark" type = "file" accept=".fasta,.fas,.fa" ref="custom_aln_file" v-on:change="handleFileUpload()"/></p>
-                <p><button id="uploadShowFasta" class="btn btn-outline-dark" v-on:click="submitCustomAlignment()" v-if="file&&type_tree=='upload'">Upload the alignment</button></p>
-                <p><button id="downloadExampleFasta" class="btn btn-outline-dark" v-on:click="getExampleFile(`static/alignments/EFTU_example.fas`, `PVExampleAlignment.fas`)" v-if="!file&&type_tree=='upload'">Download example alignment</button></p>
+                <p><button id="uploadShowFasta" class="btn btn-outline-dark" v-on:click="submitCustomAlignment()" v-if="file&&(type_tree=='upload'||type_tree=='perm')">Upload the alignment</button></p>
+                <p><button id="downloadExampleFasta" class="btn btn-outline-dark" v-on:click="getExampleFile(`static/alignments/EFTU_example.fas`, `PVExampleAlignment.fas`)" v-if="!file&&(type_tree=='upload'||type_tree=='perm')">Download example alignment</button></p>
             </div>
             <p>
                 <select class="btn btn-outline-dark dropdown-toggle" id="selectaln" v-if="tax_id" v-model="alnobj">
@@ -44,7 +48,7 @@
                 </select>
             </p>
                 <!--<span v-if="alnobj&&alnobj!='custom'">Select structure for mapping:</span>-->
-                <div v-if="alnobj&&alnobj=='custom'&&file&&type_tree=='upload'">
+                <div v-if="alnobj&&alnobj=='custom'&&file&&(type_tree=='upload'||type_tree=='perm')">
                     <label for="uploadCustomPDB" id="pdb-upload" class="btn btn-outline-dark">Upload a custom PDB</label>
                     <input id="uploadCustomPDB" class="btn btn-outline-dark" type="file" accept=".pdb" ref="customPDBfile" v-on:change="uploadCustomPDB()"/>
                     OR<br>
@@ -148,15 +152,27 @@
                     Download AA frequencies
                 </button></p>
             </div></p>
-            <p><div v-if="true" class="checkbox" id="calculatePermutation">
-                <label><input type="checkbox" v-model="checked_permutation" v-on:change="handlePermutation(checked_permutation)">
-                Calculate Permutation</label>
-                <p>Input Permutation indices:<input text="text" id="permutation_indices"></p>
-                <select class="btn btn-outline-dark dropdown-toggle" id="permutationSubstructure" v-if="checked_permutation&&structure_mapping" v-model="property" v-on:change=" getPropensities(property); handlePermutation(checked_permutation)">
-                    <option :value="null" selected disabled hidden>Select secondary structure</option>
-                    <option :value="0">All residues</option>
-                    <option v-for="substructure in substructures" v-bind:value="{ id: substructure.value, text: substructure.text, indices: substructure.indices }">{{ substructure.text }}</option>
-                </select>
+            <p><div v-if="topology_loaded&&type_tree=='perm'">
+                <label>
+                    <input id="calculatePermutationCheckbox" type="checkbox" v-model="checked_permutation" v-on:change="initializePermutationIndices(checked_permutation); toggleMolstarViewCloneVisibility(checked_permutation);">
+                    Calculate MSA Permutation
+                </label>
+                <div v-show="checked_permutation">
+                    <section style="color:red;">Usage:</section>
+                    <section>MSA indices (e.g. 100-120, 90-95)</section>
+                    <section>
+                        MSA permutation indices:
+                        <input type="text" id="permutation_indices_input" v-on:change="validatePermutationIndices();">
+                    </section>
+                    <button id="downloadPermutationButton" v-on:click="downloadPermutation();">
+                        Download permuted alignment
+                    </button>
+                    <label id="invalidPermutationIndicesMessage" style="color:red;display:none;">
+                        Invalid indices!
+                    </label>
+                    <a id="downloadPermutationAnchor" style="display:none;">
+                    </a>
+                </div>
             </div></p>
         </div>
         <div class="alignment_section">
@@ -203,6 +219,8 @@
                     Loading alignment-structure mapping <img src="static/img/loading.gif" alt="Loading topology viewer" style="height:25px;">
                 </div>
                 <div id="topview"></div>
+                <div id="topview_clone" v-if="type_tree == 'perm'" v-show="checked_permutation">
+                </div>
             </span>
         </div>
         <div class = "gradient_section" v-if = "topology_loaded">
@@ -227,6 +245,8 @@
             <span id="molif" v-if="chainid.length>0||customPDBsuccess">
                 <div id ="pdbeMolstarView">
                     Loading Molstar Component <img src="static/img/loading.gif" alt="Loading MolStar" style="height:25px;">
+                </div>
+                <div id="pdbeMolstarViewClone" v-if="type_tree == 'perm'" v-show="checked_permutation">
                 </div>
             </span>
         </div>
@@ -278,8 +298,10 @@
         type_tree: function (type_tree){
             if (this.type_tree == "orth"){
                 document.getElementById('tree_type').children[0].click();
-            }else if (this.type_tree == "upload"){
+            } else if (this.type_tree == "upload"){
                 document.getElementById('tree_type').children[1].click();
+            } else if (this.type_tree == "perm") {
+                document.getElementById('tree_type').children[2].click();
             }
         },csv_data: function(csv_data){
             customCSVhandler(csv_data);
@@ -570,10 +592,10 @@
             };
             fr.readAsText(this.file)
         },
-        cleanTreeOpts() {
+        cleanTreeOpts(type_tree_value="upload") {
             if (this.uploadSession){return;}
             Object.assign(vm.$data, initialState());
-            this.type_tree="upload";
+            this.type_tree = type_tree_value;
             this.topology_loaded=false;
             this.schemesMgr = new schemes();
             //cleanupOnNewAlignment(this, "Select new alignment!");
@@ -625,7 +647,7 @@
             }
         }, loadData (value, type_tree) {
             if (this.uploadSession){return;}
-            if (type_tree == "upload"){this.tax_id = null; return;}
+            if (type_tree == "upload" || type_tree == "perm"){this.tax_id = null; return;}
             if (value.length == 0){this.tax_id = null; return;}
             cleanupOnNewAlignment(this, "Select new alignment!");
             vm.chainid = [];
@@ -676,10 +698,10 @@
                 var url = `/ortholog-aln-api/${aln_id}/${taxid}`}
             if (type_tree == "para"){
                 var url = '/paralog-aln-api/'+aln_id.split(',')[1]}
-            if (type_tree == "upload" && !this.uploadSession&& this.cdhitSelectedOpt != "untrunc"){
+            if ((type_tree == "upload" || type_tree == "perm") && !this.uploadSession&& this.cdhitSelectedOpt != "untrunc"){
                 var url = '/custom-aln-data'
             }
-            if (type_tree == "upload" && !this.uploadSession && this.cdhitSelectedOpt == "untrunc"){
+            if ((type_tree == "upload" || type_tree == "perm") && !this.uploadSession && this.cdhitSelectedOpt == "untrunc"){
                 var url = '/custom-aln-data-nocdhit'
             }
             if (this.uploadSession){
@@ -810,6 +832,34 @@
             var viewerContainer = document.getElementById('pdbeMolstarView');
             viewerInstance.render(viewerContainer, options);
             window.viewerInstance = viewerInstance;
+
+            const molstar_item_clone = document.getElementById("pdbeMolstarViewClone");
+            if (molstar_item_clone) {
+                var pdblower_clone = "1lva";
+                molstar_item_clone.remove();
+                create_deleted_element("molif", "pdbeMolstarViewClone", "Loading Molstar Component ", true);
+                
+                var coordURL_clone = `https://coords.litemol.org/${pdblower_clone}/chains?entityId=1&authAsymId=A&encoding=bcif`;
+                var binaryCif_clone = true;
+                var structFormat_clone = "cif";
+                window.pdblower_clone = pdblower_clone;
+                var viewerInstanceClone = new PDBeMolstarPlugin();
+                var options_clone = {
+                    customData: {
+                        url: coordURL_clone,
+                        format: structFormat_clone, 
+                        binary: binaryCif_clone
+                    },
+                    hideCanvasControls: ["expand", "selection", " animation"],
+                    assemblyId: '1',
+                    hideControls: true,
+                    subscribeEvents: true,
+                    bgColor: {r:255,g:255,b:255},
+                }
+                var viewerContainerClone = document.getElementById('pdbeMolstarViewClone');
+                viewerInstanceClone.render(viewerContainerClone, options_clone);
+                window.viewerInstanceClone = viewerInstanceClone;
+            }
             
             document.addEventListener('PDB.topologyViewer.click', (e) => {
                 var molstar= viewerInstance;
@@ -892,8 +942,17 @@
             handleFilterRange(filter_range);
         },handlePropensities(checked_propensities){
             handlePropensities(checked_propensities);
-        },handlePermutation(checked_permutation){
-            handlePermutation(checked_permutation);
+        },downloadPermutation(){
+            downloadPermutation();
+        },validatePermutationIndices(){
+            validatePermutationIndices();
+        },initializePermutationIndices(checked_permutation){
+            let permutation_indices_input = document.getElementById("permutation_indices_input");
+            permutation_indices_input.value = initializePermutationIndices(checked_permutation);
+            permutation_indices_input.dispatchEvent(new Event("input"));
+            validatePermutationIndices();
+        }, toggleMolstarViewCloneVisibility(checked_permutation) {
+            // document.getElementById("pdbeMolstarViewClone").style.display = checked_permutation ? "block" : "none";
         },populatePDBs(alndata){
             populatePDBs(alndata);
         },populatePDBsFromCustomAln(firstSeq){

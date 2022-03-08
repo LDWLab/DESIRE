@@ -490,6 +490,24 @@ function handlePropensityIndicesOnTruncatedStructure(indices, startTrunc, endTru
     return newIndices.slice(0, -1);
 }
 
+function getMSALength() {
+    let split = vm.fasta_data.split('>');
+    for (let i = 0; i < split.length; i++) {
+        let fasta_data_segment = split[i];
+        if (fasta_data_segment.length > 0) {
+            return fasta_data_segment.substring(fasta_data_segment.indexOf('\n') + 1).replaceAll('\n', '').length;
+        }
+    };
+}
+
+function initializePermutationIndices(checked_permutation) {
+    if (checked_permutation) {
+        return '1-' + getMSALength();
+    } else {
+        return "";
+    }
+}
+
 function handlePropensities(checked_propensities) {
     if (checked_propensities) {
         var title = 'Amino Acid Frequencies'
@@ -541,67 +559,74 @@ function handlePropensities(checked_propensities) {
     }
 }
 
-function handlePermutation(checked_permutation) {
-    if (checked_permutation) {
-        let
-            permutation_indices = document.getElementById("permutation_indices").value;
-        invertedMap = _.invert(vm.structure_mapping);
-        let
-            indices = [];
-        vm.all_residues.forEach(index => indices.push(invertedMap[index]));
-        indices = indices.join(',');
-        // if (vm.selected_domain.length > 0) {
-        //     throw "Unfinished";
-        // }
-        // if (vm.filter_range) {
-        //     throw "Unfinished";
-        // }
+function downloadPermutation() {
+    let
+        customFasta = vm.fasta_data,
+        indices = document.getElementById("permutation_indices_input").value;
+    ajax("/permutation-data-custom/", {indices, customFasta}).then(data => {
+        let downloadHelper = document.getElementById("downloadPermutationAnchor");
+        let href = window.URL.createObjectURL(new Blob([
+            data
+        ], {
+            type : "text/plain"
+        }));
+        downloadHelper.setAttribute("href", href);
+        downloadHelper.download = "permuted_MSA.fasta";
+        downloadHelper.click();
+    });
+}
 
-        let
-        //     coil_residues = vm.coil_residues,
-        //     customFasta = vm.fasta_data,
-        //     permutation_index,
-            url_name = "/permutation-data-custom/";
-        // coil_residues.sort((a, b) => a - b);
-        // let
-        //     length = coil_residues.length;
-        // if (length > 0) {
-        //     let
-        //         previous_coil_index = coil_residues[0],
-        //         current_list = [previous_coil_index],
-        //         coil_residue_list_of_lists = [current_list];
-        //     coil_residues.slice(1).forEach(coil_index => {
-        //         if (coil_index == previous_coil_index + 1) {
-        //             current_list.push(coil_index);
-        //         } else {
-        //             current_list = [coil_index];
-        //             coil_residue_list_of_lists.push(current_list);
-        //         }
-        //         previous_coil_index = coil_index;
-        //     });
-        //     let
-        //         middle_coil_residue_list = coil_residue_list_of_lists[Math.floor(coil_residue_list_of_lists.length / 2)];
-        //     permutation_index = invertedMap[middle_coil_residue_list[Math.floor(middle_coil_residue_list.length / 2)]];
-        // } else {
-        //     permutation_index = 0;
-        // }
-        let
-            customFasta = vm.fasta_data;
-        // indices = '1-3, 5-8, 20-25';
-        indices = permutation_indices;
-        ajax(url_name, {indices, customFasta/*, permutation_index*/}).then(data => {
-            
-        });
-        // if (indices) {
-        //     ajax(url_name, {indices, customFasta}).then(data => {
-
-        //     });
-        // } else {
-        //     ajax(url_name, {customFasta}).then(data => {
-
-        //     });
-        // }
+function validatePermutationIndices() {
+    let downloadPermutationButton = document.getElementById("downloadPermutationButton");
+    let invalidPermutationIndicesMessage = document.getElementById("invalidPermutationIndicesMessage");
+    let pass = () => {
+        downloadPermutationButton.disabled = false;
+        invalidPermutationIndicesMessage.style.display = "none";
+    };
+    let fail = (message="Invalid indices!") => {
+        downloadPermutationButton.disabled = true;
+        invalidPermutationIndicesMessage.textContent = message;
+        invalidPermutationIndicesMessage.style.display = "block";
+    };
+    let permutationIndices = document.getElementById("permutation_indices_input").value;
+    if (!/^\s*\d+\s*(-\s*\d+\s*)?(\s*,\s*\d+\s*(-\s*\d+)?\s*)*\s*$/.test(permutationIndices)) {
+        fail();
+        return;
     }
+    permutationIndices = permutationIndices.replaceAll(/\s*/g, "");
+    let splitOnCommas = permutationIndices.split(/,/);
+    let msaLength = getMSALength();
+    for (let i = 0; i < splitOnCommas.length; i++) {
+        let splitOnCommasI = splitOnCommas[i];
+        let dashIndex = splitOnCommasI.indexOf("-");
+        if (dashIndex >= 0) {
+            let startMSAIndex = parseInt(splitOnCommasI.substring(0, dashIndex));
+            let endMSAIndex = parseInt(splitOnCommasI.substring(dashIndex + 1));
+            if (startMSAIndex < 1) {
+                fail("Indices out of bounds: " + startMSAIndex + " < 1");
+                return;
+            }
+            if (endMSAIndex > msaLength) {
+                fail("Indices out of bounds: " + endMSAIndex + " > " + msaLength);
+                return;
+            }
+            if (startMSAIndex > endMSAIndex) {
+                fail("Indices out of order: " + startMSAIndex + " > " + endMSAIndex);
+                return;
+            }
+        } else {
+            let msaIndex = parseInt(splitOnCommasI);
+            if (msaIndex < 1) {
+                fail("Index out of bounds: " + msaIndex + " < 1");
+                return;
+            }
+            if (msaIndex > msaLength) {
+                fail("Index out of bounds: " + msaIndex + " > " + msaLength);
+                return;
+            }
+        }
+    }
+    pass();
 }
 
 var listSecondaryStructures = function() {

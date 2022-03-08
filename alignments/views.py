@@ -290,6 +290,18 @@ def allProteinTypes(request):
     }
     return JsonResponse(context)
 
+def allSpecies(request):
+    allSpecies = []
+    with connection.cursor() as cursor:
+        sql = "select strain, strain_id from Species order by strain asc;"
+        cursor.execute(sql)
+        for row in cursor.fetchall():
+            allSpecies.append([row[0], row[1]])
+    context = {
+        "allSpecies" : allSpecies
+    }
+    return JsonResponse(context)
+
 def proteinTypesDirect(request, concatenatedTaxIds):
     results = []
     with connection.cursor() as cursor:
@@ -306,7 +318,9 @@ def proteinTypesDirect(request, concatenatedTaxIds):
             for row in cursor.fetchall():
                 proteinTypesList.append(row[0])
             results.append(proteinTypesList)
-    context = {'results' : results}
+    context = {
+        'results' : results
+    }
     return JsonResponse(context)
 
 def getAlignmentsFilterByProteinTypeAndTaxIds(request):
@@ -372,7 +386,26 @@ def getAlignmentsFilterByProteinTypeDirect(request, concatenatedProteinTypes):
     }
     return JsonResponse(context)
 
-def getTruncatedAlignmentDirect(request, moleculeType, alignmentName, strainId0, strainId1):
+def getProteinInformationFilterByStrainIDAndProteinNameDirect(request, strain_id, protein_name, internal = False):
+    sql = "select Polymer_Data.GI, Polymer_metadata.encoding_location, Polymer_metadata.classification from Alignment join Polymer_Alignments on Alignment.Aln_id = Polymer_Alignments.Aln_id join Polymer_Data on Polymer_Data.PData_id = Polymer_Alignments.PData_id join Species_Polymer on Species_Polymer.nomgd_id = Polymer_Data.nomgd_id and Species_Polymer.GI = Polymer_Data.GI join Species on Species_Polymer.strain_id = Species.strain_id join Polymer_metadata on Polymer_metadata.polymer_id = Polymer_Data.PData_id join Nomenclature on Nomenclature.nom_id = Polymer_Data.nomgd_id where Nomenclature.new_name = '" + protein_name + "' and Species.strain_id = " + str(strain_id)
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        results = []
+        for row in cursor.fetchall():
+            rowDictionary = {
+                'GI' : row[0],
+                'encoding location' : row[1],
+                'classification' : row[2]
+            }
+            results.append(rowDictionary)
+    if internal:
+        return results
+    context = {
+        'results' : results
+    }
+    return JsonResponse(context)
+
+def getPairwiseAlignmentDirect(request, moleculeType, alignmentName, strainId0, strainId1, internal = False):
     strainIds = [strainId0, strainId1]
     concatenatedStrainIds = '\'' + strainIds[0] + '\''
     for i in range(1, len(strainIds)):
@@ -402,11 +435,99 @@ def getTruncatedAlignmentDirect(request, moleculeType, alignmentName, strainId0,
             alignmentLine = alignmentLines[i]
             if modifiedStrainName0 in titleLine or modifiedStrainName1 in titleLine:
                 truncatedAlignment += alignmentLine + '\n'
+    if internal:
+        return truncatedAlignment
     context = {
         'truncatedAlignment' : truncatedAlignment
     }
     return JsonResponse(context)
-        
+
+def showPairwiseAlignmentDirect(request, moleculeType, alignmentName, strainId0, strainId1):
+    pairwiseAlignment = getPairwiseAlignmentDirect(request, moleculeType, alignmentName, strainId0, strainId1, internal = True)
+    context = {
+        'multipleLinesData' : pairwiseAlignment
+    }
+    return render(request, 'alignments/multipleLinesVisualizer.html', context)
+
+def showProteinResultsDirect(request, strain_id, gi):
+    polymerInformation = getProteinInformationFilterByStrainIDAndProteinNameDirect(request, strain_id, gi, True)
+    multipleLinesData = None
+    if len(polymerInformation) == 0:
+        multipleLinesData = "No results!"
+    else:
+        polymerInformation = polymerInformation[0]
+        multipleLinesData = '\n'.join(['GI: ' + str(polymerInformation['GI']), 'encoding location: ' + str(polymerInformation['encoding location']), 'classification: ' + str(polymerInformation['classification'])])
+    context = {
+        'multipleLinesData' : multipleLinesData
+    }
+    return render(request, 'alignments/multipleLinesVisualizer.html', context)
+
+def showStrainInformationFilterByProteinNameDirect(request, protein_name):
+    strainInformation = getStrainInformationFilterByProteinNameDirect(request, protein_name, internal = True)
+    context = {
+        'multipleLinesData' : '\n'.join(str(strainDatum[0]) + ', ' + strainDatum[1] for strainDatum in strainInformation)
+    }
+    return render(request, 'alignments/multipleLinesVisualizer.html', context)
+
+def showProteinNamesPerStrainIDAndProteinTypeDirect(request, strain_id, proteinType):
+    alignmentInformation = getProteinNamesFilterByStrainIDAndProteinTypeDirect(request, strain_id, proteinType, internal = True)
+    multipleLinesData = None
+    if len(alignmentInformation) == 0:
+        multipleLinesData = "No results!"
+    else:
+        multipleLinesData = '\n'.join(list(foo[0] + ', ' + foo[1] for foo in alignmentInformation))
+    context = {
+        'multipleLinesData' : multipleLinesData
+    }
+    return render(request, 'alignments/multipleLinesVisualizer.html', context)
+
+def showAlignmentDirect(request, protein_type, aln_name, tax_group):
+    alignment = string_fasta(request, protein_type, aln_name, tax_group, True)
+    context = {
+        'multipleLinesData' : alignment.replace('\\n', '\n')
+    }
+    return render(request, 'alignments/multipleLinesVisualizer.html', context)
+
+def getProteinNamesFilterByStrainIDAndProteinTypeDirect(request, strain_id, proteinType, internal = False):
+    sql = "select Nomenclature.new_name, Polymer_metadata.Fullseq from Polymer_Data join Nomenclature on Nomenclature.nom_id = Polymer_Data.nomgd_id join Species_Polymer on Species_Polymer.GI = Polymer_Data.GI and Species_Polymer.nomgd_id = Polymer_Data.nomgd_id join Species on Species.strain_id = Species_Polymer.strain_id join Polymer_Alignments on Polymer_Alignments.PData_id = Polymer_Data.PData_id join Alignment on Alignment.Aln_id = Polymer_Alignments.Aln_id join Polymer_metadata on Polymer_metadata.polymer_id = Polymer_Data.PData_id where Species.strain_id = " + str(strain_id) + " and Nomenclature.MoleculeGroup = '" + proteinType + "' group by Nomenclature.new_name, Polymer_metadata.Fullseq order by Nomenclature.new_name asc"
+    results = []
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        for row in cursor.fetchall():
+            results.append([row[0], row[1]])
+    if internal:
+        return results
+    context = {
+        'results' : results
+    }
+    return JsonResponse(context)
+
+def getProteinNamesFilterByProteinTypeDirect(request, proteinType):
+    sql = "select Nomenclature.new_name from Nomenclature where Nomenclature.MoleculeGroup in ('" + proteinType + "') order by Nomenclature.new_name"
+    # sql = "select Polymer_Data.GI from Polymer_Data join Nomenclature on Polymer_Data.nomgd_id = Nomenclature.nom_id where Nomenclature.MoleculeGroup = '" + proteinType + "' order by Polymer_Data.GI asc;"
+    results = []
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        for row in cursor.fetchall():
+            results.append(row[0])
+    context = {
+        'results' : results
+    }
+    return JsonResponse(context)
+
+def getStrainInformationFilterByProteinNameDirect(request, aln_name, internal = False):
+    sql = "select distinct(Species.strain_id), strain from Species join Species_Polymer on Species_Polymer.strain_id = Species.strain_id join Polymer_Data on Species_Polymer.GI = Polymer_Data.GI and Species_Polymer.nomgd_id = Polymer_Data.nomgd_id join Polymer_Alignments on Polymer_Alignments.PData_id = Polymer_Data.PData_id join Alignment on Alignment.Aln_id = Polymer_Alignments.Aln_id where Alignment.Name = '" + aln_name + "'"
+    results = []
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        for row in cursor.fetchall():
+            results.append([row[0], row[1]])
+    if internal:
+        return results
+    context = {
+        'results' : results
+    }
+    return JsonResponse(context)
 
 def getStrainsFilterByMoleculeGroupAndAlignmentDirect(request, concatenatedMoleculeGroups, concatenatedAlignmentNames):
     moleculeGroups = concatenatedMoleculeGroups.split(',')
@@ -719,166 +840,164 @@ def permutation_data_custom(request):
 def permutation_data(request, aln_id, tax_group):
     from io import StringIO
     from Bio import AlignIO
-    # if request.method == 'POST' and 'customFasta' in request.POST and aln_id is None:
-    #     fastastring = request.POST['customFasta']
-    # else:
-    #     fastastring = simple_fasta(request, aln_id, tax_group, internal=True).replace('\\n', '\n')
-    # fasta = StringIO(fastastring)
-    # if request.method == 'POST' and 'indices' in request.POST:
-    #     indices = request.POST['indices']
-    #     trimmed_fasta = trim_fasta_by_index(fasta, indices)
-    #     fasta = StringIO(format(trimmed_fasta, 'fasta'))
     fasta_variable_name = 'customFasta'
-    if request.method == 'POST' and fasta_variable_name in request.POST:
-        fastastring = request.POST[fasta_variable_name]
-        fasta = StringIO(fastastring)
-        align = AlignIO.read(fasta, "fasta")
-        # column_dimension = align.get_alignment_length()
-        # midIndex = column_dimension // 2
-        # permutation_index_variable_name = 'permutation_index'
-        # if permutation_index_variable_name in request.POST:
-        #     midIndex = int(request.POST[permutation_index_variable_name])
-        # else:
-        #     midIndex = 0
-        indices_variable_name = 'indices'
-        if indices_variable_name in request.POST:
-            indices = request.POST[indices_variable_name]
-            indexPairs = indices.replace(" ", "").split(',')
-            label_modifiers = []
-            per_row_gap_counts = []
-            # align = align[0:1, :]
-            row_range = range(len(align))
-            column_range = range(align.get_alignment_length())
-            for row_index in row_range:
-                label_modifiers.append("")
-                gap_counts_at_row_index = [(0, 0)]
-                per_row_gap_counts.append(gap_counts_at_row_index)
-                running_concurrent_gap_count = 0
-                running_gap_count = 0
-                for column_index in column_range:
-                    if align[row_index, column_index] == '-':
-                        running_concurrent_gap_count += 1
-                    elif running_concurrent_gap_count > 0:
-                        running_gap_count += running_concurrent_gap_count
-                        running_concurrent_gap_count = 0
-                        gap_counts_at_row_index.append((column_index, running_gap_count))
-            newAlign = align[:, 0:0]
+    indices_variable_name = 'indices'
+    if not (request.method == 'POST' and fasta_variable_name in request.POST and indices_variable_name in request.POST):
+        raise KeyError(fasta_variable_name + " and " + indices_variable_name + " not found in request.POST")
+    alignment = AlignIO.read(StringIO(request.POST[fasta_variable_name]), "fasta")
+    row_dimension = len(alignment)
+    column_dimension = alignment.get_alignment_length()
+    # Initialize an empty alignment.
+    new_alignment = alignment[:, 0:0]
+    for msa_index_pair in re.sub(r"\s*", "", request.POST[indices_variable_name]).split(","):
+        dash_index = msa_index_pair.find("-")
+        if dash_index >= 0:
+            # Both a start index and end index are provided.
+            # Convert from a 1-based index system to a 0-based index system.
+            start_msa_index = int(msa_index_pair[:dash_index]) - 1
+            end_msa_index = int(msa_index_pair[dash_index + 1:])
+        else:
+            # Only one index provided.
+            # Convert from a 1-based index system to a 0-based index system.
+            end_msa_index = int(msa_index_pair)
+            start_msa_index = end_msa_index - 1
+        # Append to the new alignment.
+        new_alignment += alignment[:, start_msa_index:end_msa_index]
 
-            # recordList = []
-            # newAlign = MultipleSeqAlignment(recordList)
+    # Initialize the label suffixes
+    label_suffixes = [""] * row_dimension
+    for row_index in range(row_dimension):
+        base_column_index = start_msa_index
+        while base_column_index < column_dimension and alignment[row_index, base_column_index] == '-':
+            base_column_index += 1
+        previous_column_index_gap_flag = False
+        for column_index in range(base_column_index + 1, end_msa_index):
+            column_index_gap_flag = alignment[row_index, column_index] == '-'
+            if column_index_gap_flag != previous_column_index_gap_flag:
+                if column_index_gap_flag:
+                    if column_index == base_column_index + 1:
+                        label_suffixes[row_index] += str(base_column_index + 1) + ", "
+                    else:
+                        label_suffixes[row_index] += str(base_column_index + 1) + "-" + str(column_index + 1) + ", "
+                else:
+                    base_column_index = column_index
+            previous_column_index_gap_flag = column_index_gap_flag
+        if alignment[row_index, end_msa_index - 1] != '-':
+            if base_column_index == end_msa_index - 1:
+                label_suffixes[row_index] += str(base_column_index + 1) + ", "
+            else:
+                label_suffixes[row_index] += str(base_column_index + 1) + "-" + str(end_msa_index) + ", "
 
-            valid_index_pair_flag = False
-            for indexPair in indexPairs:
-                indexPair = indexPair.split('-')
-                column_index_0 = int(indexPair[0]) - 1
-                column_index_1 = int(indexPair[1])
-                if 0 <= column_index_0 < column_index_1:
-                    valid_index_pair_flag = True
-                    for row_index in row_range:
-                        base_column_index = column_index_0
-                        while align[row_index, base_column_index] == '-':
-                            base_column_index += 1
-                        previous_column_index_gap_flag = False
-                        _range = range(base_column_index + 1, column_index_1)
-                        for column_index in _range:
-                            column_index_gap_flag = align[row_index, column_index] == '-'
-                            if column_index_gap_flag != previous_column_index_gap_flag:
-                                if column_index_gap_flag:
-                                    if column_index == base_column_index + 1:
-                                        label_modifiers[row_index] += str(base_column_index + 1) + ", "
-                                    else:
-                                        label_modifiers[row_index] += str(base_column_index + 1) + "-" + str(column_index + 1) + ", "
-                                else:
-                                    base_column_index = column_index
-                            previous_column_index_gap_flag = column_index_gap_flag
-                        if align[row_index, column_index_1 - 1] != '-':
-                            if base_column_index == column_index_1 - 1:
-                                label_modifiers[row_index] += str(base_column_index + 1) + ", "
-                            else:
-                                label_modifiers[row_index] += str(base_column_index + 1) + "-" + str(column_index_1) + ", "
-                    newAlign += align[:, column_index_0:column_index_1]
-                #     for row_index in row_range:
-                #         gap_counts_at_row_index = per_row_gap_counts[row_index]
-                #         gap_counts_at_row_index_range = range(len(gap_counts_at_row_index))
-                #         lower_gap_count_index = 0
-                #         for gap_count_index in gap_counts_at_row_index_range:
-                #             gap_count = gap_counts_at_row_index[gap_count_index]
-                #             gap_count_column_index = gap_count[0]
-                #             if gap_count_column_index > column_index_0:
-                #                 break
-                #             lower_gap_count_index = gap_count_index
-                #         upper_gap_count_index = lower_gap_count_index
-                #         for gap_count_index in gap_counts_at_row_index_range[lower_gap_count_index + 1:]:
-                #             gap_count = gap_counts_at_row_index[gap_count_index]
-                #             gap_count_column_index = gap_count[0]
-                #             if gap_count_column_index > column_index_1:
-                #                 break
-                #             upper_gap_count_index = gap_count_index
-                        
-                #         label_modifiers[row_index] += str(column_index_0 - gap_counts_at_row_index[lower_gap_count_index][1] + 1) + "-" + str(column_index_1 - gap_counts_at_row_index[upper_gap_count_index][1]) + ", "
-            if valid_index_pair_flag:
-                for row_index in row_range:
-                    if len(label_modifiers[row_index]) > 0:
-                        newAlign[row_index].id = re.sub('([^_]*)_?$', r'\1_', newAlign[row_index].id) + label_modifiers[row_index][:-2]
-                        newAlign[row_index].description = ""
-            align = newAlign
-        #     minimumIndex = column_dimension
-        #     maximumIndex = 0
-        #     for index in indices.split(','):
-        #         index = int(index)
-        #         if (index < minimumIndex):
-        #             minimumIndex = index
-        #         if (index > maximumIndex):
-        #             maximumIndex = index
-        #     midIndex = (minimumIndex + maximumIndex) // 2
-
-        # This is the top row of the alignment. It makes for easy checking of the permutation; it serves no other purpose.
-        # align = align[0:1, midIndex:] + align[0:1, :midIndex]
-        # align = align[:, midIndex:] + align[:, :midIndex]
-    else:
-        raise NotImplementedError()
-    fasta = StringIO(format(align, 'fasta'))
-    # lines = fasta.split("\n")
-    # linePairs = []
-    # labelLine = lines[0]
-    # alignmentLine = ""
-    # for line in lines[1:]:
-    #     if line.startswith('>'):
-    #         linePairs.append((labelLine, alignmentLine))
-    #         labelLine = line
-    #         alignmentLine = ""
-    #     else:
-    #         alignmentLine += line
-    permutation_string = fasta.getvalue()
+    # Label the fasta-file entries.
+    for row_index, label_suffix in enumerate(label_suffixes):
+        if len(label_suffix) > 0:
+            new_alignment[row_index].id = re.sub('([^_]*)_?$', r'\1_', new_alignment[row_index].id) + label_suffix[:-2]
+            new_alignment[row_index].description = ""
+    permutation_string = StringIO(format(new_alignment, 'fasta')).getvalue()
     # request.FILES['permuted_fasta'] = permutation_string
 
     now = datetime.datetime.now()
     fileNameSuffix = "_" + str(now.year) + "_" + str(now.month) + "_" + str(now.day) + "_" + str(now.hour) + "_" + str(now.minute) + "_" + str(now.second) + "_" + str(now.microsecond)
-    alignmentFileName = "./static/permuted_alignment" + fileNameSuffix + ".fasta"
+    # alignmentFilePath = "./static/permuted_alignment" + fileNameSuffix + ".fasta"
 
     # hhblits
     # command: /usr/local/bin/hh-suite/bin/hhsearch -i /home/blastdb/alignments/beta_barrels/OB_aIF1.fa -d /home/blastdb/ecod_F_fasta/ecod215/ecod215_numk3 -maxres 550000 -o OB_aIF1.txt -M 50 -add_cons
+    # /usr/local/bin/hh-suite/bin/hhsearch -i /home/blastdb/ecod_F_fasta/test.fa -d /home/blastdb/ecod_F_fasta/ecodFam -maxres 550000 -o test.hhr
     # Convert to standard JSON:
     # NOTE: add any installed prerequisites to the README.md (/DESIRE/README.md)
 
-    fh = open(alignmentFileName, "w")
-    fh.write(permutation_string)
-    fh.close()
+    # fh = open(alignmentFilePath, "w")
+    # fh.write(permutation_string)
+    # fh.close()
 
-    os.remove(alignmentFileName)
+    # hhsearchOutputFilePath = './static/test.hhr' + fileNameSuffix
+    # hhsearch(alignmentFilePath, '/home/blastdb/ecod_F_fasta/ecodFam', hhsearchOutputFilePath, 550000, 50, False, True)
 
-    response = HttpResponse(permutation_string, content_type="text/plain")
+    # os.remove(alignmentFilePath)
+    # os.remove(hhsearchOutputFilePath)
+
+    # response = HttpResponse(permutation_string, content_type="text/plain")
+    response = JsonResponse(permutation_string, safe = False)
     return response
-# >Bacteria_Synechococcus_sp._PCC_7335_\n
-# NALPLHRIPLGTTVHNVELVPGRGGQVVRAAGAGAQLVAKEGG--YVTLKLPSSEVRMIR\nRECYATIGQVGNVEHRNLSLGKAGRKRWA-------GRRPEVRGSVMNPVDHPHGGGE--\n-GRAPIG-----RSGPVTP-WGKPALGYKTRKKKK----GSDAMIVRRRRRSSKRGRGGR\nNAMGIRSYRPLTPGTRERTV-SDFSTVTADK-PEKSLTYSV-----------HRPKG-RN\nN-RGVITCRHRGGGH-----KRLYR--------EIDFRRN--------KFNVPAKVATIE\nYDPNRNARISLLHYE-DGE-----KRYILHPIGLEVGATIVSG---EDAPFEVG\n
 
+def hhsearch(input_file_path, input_database_path, output_file_path, max_residues=550000, threshold_percentage=None, add_cons_flag=True, parse_output_flag=False):
+    if (max_residues <= 0):
+        raise ValueError('The input max_residues value must be greater than zero')
+    hhsearch_command = '/usr/local/bin/hh-suite/bin/hhsearch -i ' + input_file_path + ' -d ' + input_database_path + ' -o ' + output_file_path  + ' -maxres ' + str(max_residues)
+    if (not threshold_percentage is None):
+        if (threshold_percentage < 0 or threshold_percentage > 100):
+            raise ValueError('The input threshold_percentage value must be between 0 and 100 inclusively.')
+        hhsearch_command += ' -M ' + str(threshold_percentage)
+    if add_cons_flag:
+        hhsearch_command += ' -add_cons'
+    os.system(hhsearch_command)
+    if (parse_output_flag):
+        return parse_hh_output(output_file_path)
 
-# HRIPLGTTVHNVELVPGRGGQVVRAAGAGAQLVAKEGG--YVTLKLPSSEVRMIRRECYA
-# TIGQVGNVEHRNLSLGKAGRKRWA-------GRRPEVRGSVMNPVDHPHGGGE---GRAP
-# IG-----RSGPVTP-WGKPALGYKTRKKKK----GSDAMIVRRRRRSSKRGRGGRNAMGI
-# RSYRPLTPGTRERTV-SDFSTVTADK-PEKSLTYSV-----------HRPKG-RNN-RGV
-# ITCRHRGGGH-----KRLYR--------EIDFRRN--------KFNVPAKVATIEYDPNR
-# NARISLLHYE-DGE-----KRYILHPIGLEVGATIVSG---EDAPFEVGNALPL
+def hhalign(input_query_file_path, input_template_file_path, output_file_path, parse_output_flag = False):
+    hhalign_command = '/usr/local/bin/hh-suite/bin/hhsearch -i' + input_query_file_path + ' -t ' + input_template_file_path + ' -o ' + output_file_path
+    os.system(hhalign_command)
+    if (parse_output_flag):
+        return parse_hh_output(output_file_path)
+
+def parse_hh_output(hh_output_file_path):
+    file_handler = open(hh_output_file_path, 'r')
+    lines = file_handler.readlines()
+    file_handler.close()
+    pattern = re.compile('^\\s*No\\s+Hit\\s+Prob\\s+E-value\\s+P-value\\s+Score\\s+SS\\s+Cols\\s+Query HMM\\s+Template HMM\\s*$')
+    line_index = 0
+    while (not pattern.match(lines[line_index])):
+        line_index += 1
+    title_line = lines[line_index]
+    index_of_start_of_no = title_line.index('No')
+    index_of_start_of_hit = title_line.index('Hit', index_of_start_of_no + len('No'))
+    index_of_start_of_prob = title_line.index('Prob', index_of_start_of_hit + len('Hit'))
+    index_of_start_of_e_value = title_line.index('E-value', index_of_start_of_prob + len('Prob'))
+    index_of_start_of_p_value = title_line.index('P-value', index_of_start_of_e_value + len('E-value'))
+    index_of_start_of_score = title_line.index('Score', index_of_start_of_p_value + len('P-value'))
+    index_of_start_of_ss = title_line.index('SS', index_of_start_of_score + len('Score'))
+    index_of_start_of_cols = title_line.index('Cols', index_of_start_of_ss + len('SS'))
+    index_of_start_of_query_hmm = title_line.index('Query HMM', index_of_start_of_cols + len('Cols'))
+    index_of_start_of_template_hmm = title_line.index('Template HMM', index_of_start_of_query_hmm + len('Query HMM'))
+    # Skip over the matching title line.
+    line_index += 1
+    start_data_lines_index = line_index
+    pattern = re.compile('^\\s*$')
+    while line_index < len(lines) and (not pattern.match(lines[line_index])):
+        line_index += 1
+    data_lines = lines[start_data_lines_index:line_index]
+    mapped_data = []
+    for data_line_index in range(len(data_lines)):
+        data_line = data_lines[data_line_index]
+        no_substring = data_line[index_of_start_of_no - 1 : index_of_start_of_hit - 1].strip()
+        hit_substring = data_line[index_of_start_of_hit - 1 : index_of_start_of_prob - 1].strip()
+        prob_substring = data_line[index_of_start_of_prob - 1 : index_of_start_of_e_value - 1].strip()
+        e_value_substring = data_line[index_of_start_of_e_value - 1 : index_of_start_of_p_value - 1].strip()
+        p_value_substring = data_line[index_of_start_of_p_value - 1 : index_of_start_of_score - 1].strip()
+        score_substring = data_line[index_of_start_of_score - 1 : index_of_start_of_ss - 1].strip()
+        ss_substring = data_line[index_of_start_of_ss - 1 : index_of_start_of_cols - 1].strip()
+        cols_substring = data_line[index_of_start_of_cols - 1 : index_of_start_of_query_hmm - 1].strip()
+        query_hmm_substring = data_line[index_of_start_of_query_hmm - 1 : index_of_start_of_template_hmm - 1].strip()
+        template_hmm_substring = data_line[index_of_start_of_template_hmm - 1 :].strip()
+        mapped_data += [{
+            'No' : int(no_substring),
+            'Hit' : hit_substring,
+            'Prob' : float(prob_substring),
+            'E-value' : float(e_value_substring),
+            'P-value' : float(p_value_substring),
+            'Score' : float(score_substring),
+            'SS' : float(ss_substring),
+            'Cols' : int(cols_substring),
+            'Query HMM' : query_hmm_substring,
+            'Template HMM' : template_hmm_substring,
+        }]
+    return mapped_data
+
+def testHMMCode(request):
+    hhalign_output_file_path = './static/a.hhr'
+    parsed = parse_hh_output(hhalign_output_file_path)
+    hhsearch_output_file_path = './static/b.hhr'
+    parsed = parse_hh_output(hhsearch_output_file_path)
 
 def propensities(request, align_name, tax_group):
     aln_id = Alignment.objects.filter(name = align_name)[0].aln_id

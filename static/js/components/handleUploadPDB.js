@@ -127,6 +127,21 @@ function postPDBdata (pdbID, entities){
                     var topology_viewer = `<pdb-topology-viewer id="PdbeTopViewer" entry-id=${pdbID} entity-id=${entities.entityID} chain-id=${entities.chainID} pvapi="true" filter-range=1,100000></pdb-topology-viewer>`
                     document.getElementById('topview').innerHTML = topology_viewer;
                     window.viewerInstanceTop = document.getElementById("PdbeTopViewer");
+
+                    var topview_clone = document.getElementById('topview_clone');
+                    if (topview_clone) {
+                        // var pdbID_clone = "1JJR";
+                        // var entityID_clone = 1;
+                        // var chainID_clone = "A";
+                        // var mapping_clone = [0, 0];
+                        var pdbID_clone = "1LVA";
+                        var entityID_clone = 1;
+                        var chainID_clone = "A";
+                        var mapping_clone = [0, 0];
+                        var topology_viewer = `<pdb-topology-viewer id="PdbeTopViewerClone" entry-id=${pdbID_clone} entity-id=${entityID_clone} chain-id=${chainID_clone} filter-range=${mapping_clone}></pdb-topology-viewer>`;//`<pdb-topology-viewer id="PdbeTopViewer" entry-id=${pdbID} entity-id=${entities.entityID} chain-id=${entities.chainID} pvapi="true" filter-range=1,100000></pdb-topology-viewer>`
+                        topview_clone.innerHTML = topology_viewer;
+                        window.viewerInstanceTop_clone = document.getElementById("PdbeTopViewerClone");
+                    }
                 }
             }).catch(error => {
                 var topview = document.querySelector('#topview');
