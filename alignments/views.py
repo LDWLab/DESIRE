@@ -424,7 +424,8 @@ def getPairwiseAlignmentDirect(request, moleculeType, alignmentName, strainId0, 
         speciesName0, speciesName1 = speciesNames
     alignment = string_fasta(request, moleculeType, alignmentName, strainId0 + ',' + strainId1, internal=True)
     alignment = alignment.replace('\\n', '\n')
-    truncatedAlignment = ''
+    # alignment = alignment.replace('\n', '\r')
+    pairwiseAlignment = ''
     if (alignment.endswith('\n')) :
         alignment = alignment[0:-1]
         alignmentLines = alignment.splitlines()
@@ -434,13 +435,11 @@ def getPairwiseAlignmentDirect(request, moleculeType, alignmentName, strainId0, 
             titleLine = alignmentLines[i - 1]
             alignmentLine = alignmentLines[i]
             if modifiedStrainName0 in titleLine or modifiedStrainName1 in titleLine:
-                truncatedAlignment += alignmentLine + '\n'
+                pairwiseAlignment += alignmentLine + '\n'
+    # return pairwiseAlignment
     if internal:
-        return truncatedAlignment
-    context = {
-        'truncatedAlignment' : truncatedAlignment
-    }
-    return JsonResponse(context)
+        return pairwiseAlignment
+    return JsonResponse(pairwiseAlignment, safe = False)
 
 def showPairwiseAlignmentDirect(request, moleculeType, alignmentName, strainId0, strainId1):
     pairwiseAlignment = getPairwiseAlignmentDirect(request, moleculeType, alignmentName, strainId0, strainId1, internal = True)
