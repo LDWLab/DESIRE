@@ -49,6 +49,9 @@ var assignColorsAndStrucMappings = function (vueObj, struct_mapping){
         }
     }
     window.mapped_aa_properties = mapped_aa_properties;
+    window.mapped_aa_properties_clone = new Map();
+    window.mapped_aa_properties_clone.set("Test", []);
+    // window.mapped_aa_properties_clone.set("Test", window.mapped_aa_properties.get("Charge"))
     retry(delayedMapping, 10, 1000);
 }
 

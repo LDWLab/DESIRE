@@ -282,6 +282,7 @@ var cleanupOnNewAlignment = function (vueObj, aln_text='') {
         if (aln_item) {aln_item.remove(); create_deleted_element("alnif", "alnDiv", aln_text, true)}
     }
     window.mapped_aa_properties = null;
+    window.mapped_aa_properties_clone = null;
     vueObj.checkedRNA = false,
     vueObj.customPDBid = null,
     vueObj.pdbStart = null,
