@@ -510,6 +510,16 @@
             if (this.topology_loaded){
                 recolorTopStar(name);
             }
+        }, selected_property_clone: function(name) {
+            if (this.uploadSession) {
+                return;
+            }
+            if (!name) {
+                return;
+            }
+            if (!/^select data$/i.test(name)) {
+                recolorTopStarClone(name);
+            }
         },cdhitSelectedOpt: function(opt){
             if (opt=="untrunc"){
                 this.cdhitOpts = this.cdhitOpts.filter(function( obj ) {

@@ -1683,6 +1683,7 @@ var __awaiter = this && this.__awaiter || function (t, s, a, h) {
                                 b : blue
                             }
                         ]);
+                        c.set(index, 0);
                     }
                 }
                 if (selectSections_RV1.get(n).push({
@@ -1748,7 +1749,7 @@ var __awaiter = this && this.__awaiter || function (t, s, a, h) {
         }, t.prototype.updateProperty = function () {
             var t = this.targetEle.querySelector(".menuSelectbox"),
                 e = parseInt(t.selectedIndex);
-            rv3VUEcomponent.selected_property = this.domainTypes[e].label
+            rv3VUEcomponent[this.selected_property_variable_name] = this.domainTypes[e].label
         }, t.prototype.resetTheme = function () {
             var o = this;
             this.svgEle.selectAll(".coloured").each(function (t) {
@@ -2031,7 +2032,7 @@ window.PdbTopologyViewerPlugin = PdbTopologyViewerPlugin,
             g = (n = i.n(S)()(HTMLElement), p()(w, n), d()(w, null, [{
                 key: "observedAttributes",
                 get: function () {
-                    return ["pv-aa-properties-variable-name", "entry-id", "entity-id", "filter-range", "chain-id", "display-style", "error-style", "menu-style", "subscribe-events", "pvapi"]
+                    return ["pv-aa-properties-variable-name", "pv-selected-property-variable-name", "entry-id", "entity-id", "filter-range", "chain-id", "display-style", "error-style", "menu-style", "subscribe-events", "pvapi"]
                 }
             }]), d()(w, [{
                 key: "validateParams",
@@ -2044,19 +2045,19 @@ window.PdbTopologyViewerPlugin = PdbTopologyViewerPlugin,
                     if (this.validateParams()) {
                         void 0 === this.pluginInstance && (this.pluginInstance = new PdbTopologyViewerPlugin);
                         var t = {
-                            pv_aa_properties_variable_name: this.pv_aa_properties_variable_name,
                             entryId: this.entryId,
                             entityId: this.entityId,
                             entropyId: this.entropyId
                         };
                         this.pluginInstance.local_mapped_aa_properties = window[this.pv_aa_properties_variable_name];
+                        this.pluginInstance.selected_property_variable_name = this.pv_selected_property_variable_name;
                         void 0 !== this.chainId && null !== this.chainId && (t.chainId = this.chainId), void 0 !== this.displayStyle && null !== this.displayStyle && (t.displayStyle = this.displayStyle), void 0 !== this.errorStyle && null !== this.errorStyle && (t.errorStyle = this.errorStyle), void 0 !== this.menuStyle && null !== this.menuStyle && (t.menuStyle = this.menuStyle), void 0 !== this.subscribeEvents && null !== this.subscribeEvents && (t.subscribeEvents = this.subscribeEvents), void 0 !== this.pvAPI && null !== this.pvAPI && (t.pvAPI = this.pvAPI), void 0 !== this.filterRange && null !== this.filterRange && (t.filterRange = this.filterRange), this.pluginInstance.render(this, t)
                     }
                 }
             }, {
                 key: "attributeChangedCallback",
                 value: function () {
-                    this.pv_aa_properties_variable_name = this.getAttribute("pv-aa-properties-variable-name"), this.entryId = this.getAttribute("entry-id"), this.entityId = this.getAttribute("entity-id"), this.chainId = this.getAttribute("chain-id"), this.filterRange = this.getAttribute("filter-range"), this.displayStyle = this.getAttribute("display-style"), this.errorStyle = this.getAttribute("error-style"), this.menuStyle = this.getAttribute("menu-style"), this.subscribeEvents = this.getAttribute("subscribe-events"), this.pvAPI = /true/i.test(this.getAttribute("pvapi")), this.invokePlugin()
+                    this.pv_aa_properties_variable_name = this.getAttribute("pv-aa-properties-variable-name"), this.pv_selected_property_variable_name = this.getAttribute("pv-selected-property-variable-name"), this.entryId = this.getAttribute("entry-id"), this.entityId = this.getAttribute("entity-id"), this.chainId = this.getAttribute("chain-id"), this.filterRange = this.getAttribute("filter-range"), this.displayStyle = this.getAttribute("display-style"), this.errorStyle = this.getAttribute("error-style"), this.menuStyle = this.getAttribute("menu-style"), this.subscribeEvents = this.getAttribute("subscribe-events"), this.pvAPI = /true/i.test(this.getAttribute("pvapi")), this.invokePlugin()
                 }
             }]), w);
 

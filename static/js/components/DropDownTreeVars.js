@@ -52,6 +52,7 @@ export function initialState (){
         checked_selection: false,
         checked_customMap: false,
         selected_property: null,
+        selected_property_clone: null,
         csv_data: null,
         custom_headers: [],
         raiseCustomCSVWarn: null,

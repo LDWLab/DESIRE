@@ -304,6 +304,7 @@ var cleanupOnNewAlignment = function (vueObj, aln_text='') {
     vueObj.structure_mapping = null;
     vueObj.poor_structure_map = null;
     vueObj.selected_property = null;
+    vueObj.selected_property_clone = null;
     vueObj.freqCSV = null;
     window.ajaxRun = false;
     window.custom_prop = null;
@@ -624,6 +625,34 @@ var fetchTWCdata = function (fasta){
             vm.available_properties.unshift({Name:"TwinCons", url:"static/alignments/svg/TwinCons.svg"});
         }
     })
+}
+
+var recolorTopStarClone = function(name) {
+    var selectBox = viewerInstanceTopClone.pluginInstance.targetEle.querySelector('.menuSelectbox');
+    var newIndex = indexMatchingText(selectBox.options, name);
+    var selectedDomain = viewerInstanceTopClone.pluginInstance.domainTypes[newIndex];
+    viewerInstanceTopClone.pluginInstance.updateTheme(selectedDomain.data);
+
+    viewerInstanceClone.visual.select({
+        data: selectSections_RV1.get(name),
+        nonSelectedColor: {
+            r : 255,
+            g : 255,
+            b : 255
+        }
+    }).catch(err => {
+        console.log(err);
+        vm.$nextTick(function() {
+            viewerInstanceClone.visual.select({
+                data: selectSections_RV1.get(name),
+                nonSelectedColor: {
+                    r : 255,
+                    g : 255,
+                    b : 255
+                }
+            });
+        });
+    });
 }
 
 var recolorTopStar = function (name){
