@@ -1163,7 +1163,7 @@ var __awaiter = this && this.__awaiter || function (t, s, a, h) {
             this.alreadyRan || (this.alreadyRan = !0, this.getApiData(this.entryId, this.chainId).then(function (t) {
                 if (t) {
                     if (void 0 === t[0] || void 0 === t[2] || void 0 === t[4]) return void e.displayError();
-                    e.apiData = t, e.pdbevents = e.createNewEvent(["PDB.topologyViewer.click", "PDB.topologyViewer.mouseover", "PDB.topologyViewer.mouseout"]), e.getPDBSequenceArray(e.apiData[0][e.entryId]), e.drawTopologyStructures(), e.createDomainDropdown(), e.subscribeEvents && e.subscribeWcEvents()
+                    e.apiData = t, e.pdbevents = e.createNewEvent(["PDB.topologyViewer" + e.suffix + ".click", "PDB.topologyViewer" + e.suffix + ".mouseover", "PDB.topologyViewer" + e.suffix + ".mouseout"]), e.getPDBSequenceArray(e.apiData[0][e.entryId]), e.drawTopologyStructures(), e.createDomainDropdown(), e.subscribeEvents && e.subscribeWcEvents()
                 }
             }))
         }, t.prototype.displayError = function (t) {
@@ -1288,7 +1288,7 @@ var __awaiter = this && this.__awaiter || function (t, s, a, h) {
             var n = this.targetEle;
             void 0 !== i && (n = i), void 0 !== e && (this.pdbevents[t].eventData = e), n.dispatchEvent(this.pdbevents[t])
         }, t.prototype.clickAction = function (t) {
-            1 == masked_array[t.residue_number - 1] && this.dispatchEvent("PDB.topologyViewer.click", {
+            1 == masked_array[t.residue_number - 1] && this.dispatchEvent("PDB.topologyViewer" + this.suffix + ".click", {
                 residueNumber: t.residue_number,
                 type: t.type,
                 entryId: this.entryId,
@@ -1298,7 +1298,7 @@ var __awaiter = this && this.__awaiter || function (t, s, a, h) {
             })
         }, t.prototype.mouseoverAction = function (t, e) {
             var i = d3.select(t);
-            "NaN" != e.tooltipMsg && (this.renderTooltip(e, "show"), "strands" !== e.type && "helices" !== e.type || i.attr("fill", this.defaultColours.mouseOver).attr("fill-opacity", "0.3"), "coils" === e.type && i.attr("stroke", this.defaultColours.mouseOver).attr("stroke-width", 1), this.dispatchEvent("PDB.topologyViewer.mouseover", {
+            "NaN" != e.tooltipMsg && (this.renderTooltip(e, "show"), "strands" !== e.type && "helices" !== e.type || i.attr("fill", this.defaultColours.mouseOver).attr("fill-opacity", "0.3"), "coils" === e.type && i.attr("stroke", this.defaultColours.mouseOver).attr("stroke-width", 1), this.dispatchEvent("PDB.topologyViewer" + this.suffix + ".mouseover", {
                 residueNumber: e.residue_number,
                 type: e.type,
                 entryId: this.entryId,
@@ -1311,7 +1311,7 @@ var __awaiter = this && this.__awaiter || function (t, s, a, h) {
                 n = 0,
                 r = .3,
                 o = d3.select(t);
-            this.renderTooltip("", "hide"), o.classed("coloured") ? "coils" === e.type && 0 != masked_array.length && 0 == masked_array[e.residue_number] ? i = this.defaultColours.borderColor : (i = o.attr("data-color"), r = n = 1) : "coils" === e.type && (i = this.defaultColours.borderColor), "strands" !== e.type && "helices" !== e.type || o.attr("fill", i).attr("fill-opacity", n), "coils" === e.type && (o.attr("stroke", i).attr("stroke-opacity", 1), o.attr("stroke", i).attr("stroke-width", r)), this.dispatchEvent("PDB.topologyViewer.mouseout", {
+            this.renderTooltip("", "hide"), o.classed("coloured") ? "coils" === e.type && 0 != masked_array.length && 0 == masked_array[e.residue_number] ? i = this.defaultColours.borderColor : (i = o.attr("data-color"), r = n = 1) : "coils" === e.type && (i = this.defaultColours.borderColor), "strands" !== e.type && "helices" !== e.type || o.attr("fill", i).attr("fill-opacity", n), "coils" === e.type && (o.attr("stroke", i).attr("stroke-opacity", 1), o.attr("stroke", i).attr("stroke-width", r)), this.dispatchEvent("PDB.topologyViewer" + this.suffix + ".mouseout", {
                 filterRange: filterRange,
                 entryId: this.entryId,
                 entityId: this.entityId,
@@ -2032,7 +2032,7 @@ window.PdbTopologyViewerPlugin = PdbTopologyViewerPlugin,
             g = (n = i.n(S)()(HTMLElement), p()(w, n), d()(w, null, [{
                 key: "observedAttributes",
                 get: function () {
-                    return ["pv-aa-properties-variable-name", "pv-selected-property-variable-name", "entry-id", "entity-id", "filter-range", "chain-id", "display-style", "error-style", "menu-style", "subscribe-events", "pvapi"]
+                    return ["pv-aa-properties-variable-name", "pv-selected-property-variable-name", "pv-suffix", "entry-id", "entity-id", "filter-range", "chain-id", "display-style", "error-style", "menu-style", "subscribe-events", "pvapi"]
                 }
             }]), d()(w, [{
                 key: "validateParams",
@@ -2051,13 +2051,14 @@ window.PdbTopologyViewerPlugin = PdbTopologyViewerPlugin,
                         };
                         this.pluginInstance.local_mapped_aa_properties = window[this.pv_aa_properties_variable_name];
                         this.pluginInstance.selected_property_variable_name = this.pv_selected_property_variable_name;
+                        this.pluginInstance.suffix = this.pv_suffix;
                         void 0 !== this.chainId && null !== this.chainId && (t.chainId = this.chainId), void 0 !== this.displayStyle && null !== this.displayStyle && (t.displayStyle = this.displayStyle), void 0 !== this.errorStyle && null !== this.errorStyle && (t.errorStyle = this.errorStyle), void 0 !== this.menuStyle && null !== this.menuStyle && (t.menuStyle = this.menuStyle), void 0 !== this.subscribeEvents && null !== this.subscribeEvents && (t.subscribeEvents = this.subscribeEvents), void 0 !== this.pvAPI && null !== this.pvAPI && (t.pvAPI = this.pvAPI), void 0 !== this.filterRange && null !== this.filterRange && (t.filterRange = this.filterRange), this.pluginInstance.render(this, t)
                     }
                 }
             }, {
                 key: "attributeChangedCallback",
                 value: function () {
-                    this.pv_aa_properties_variable_name = this.getAttribute("pv-aa-properties-variable-name"), this.pv_selected_property_variable_name = this.getAttribute("pv-selected-property-variable-name"), this.entryId = this.getAttribute("entry-id"), this.entityId = this.getAttribute("entity-id"), this.chainId = this.getAttribute("chain-id"), this.filterRange = this.getAttribute("filter-range"), this.displayStyle = this.getAttribute("display-style"), this.errorStyle = this.getAttribute("error-style"), this.menuStyle = this.getAttribute("menu-style"), this.subscribeEvents = this.getAttribute("subscribe-events"), this.pvAPI = /true/i.test(this.getAttribute("pvapi")), this.invokePlugin()
+                    this.pv_aa_properties_variable_name = this.getAttribute("pv-aa-properties-variable-name"), this.pv_selected_property_variable_name = this.getAttribute("pv-selected-property-variable-name"), this.pv_suffix = this.getAttribute("pv-suffix"), this.entryId = this.getAttribute("entry-id"), this.entityId = this.getAttribute("entity-id"), this.chainId = this.getAttribute("chain-id"), this.filterRange = this.getAttribute("filter-range"), this.displayStyle = this.getAttribute("display-style"), this.errorStyle = this.getAttribute("error-style"), this.menuStyle = this.getAttribute("menu-style"), this.subscribeEvents = this.getAttribute("subscribe-events"), this.pvAPI = /true/i.test(this.getAttribute("pvapi")), this.invokePlugin()
                 }
             }]), w);
 

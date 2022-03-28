@@ -838,6 +838,7 @@
                 hideControls: true,
                 subscribeEvents: true,
                 bgColor: {r:255,g:255,b:255},
+                pv_events_suffix: ""
             }
             var viewerContainer = document.getElementById('pdbeMolstarView');
             viewerInstance.render(viewerContainer, options);
@@ -865,6 +866,7 @@
                     hideControls: true,
                     subscribeEvents: true,
                     bgColor: {r:255,g:255,b:255},
+                    pv_events_suffix: "_clone"
                 }
                 var viewerContainerClone = document.getElementById('pdbeMolstarViewClone');
                 viewerInstanceClone.render(viewerContainerClone, options_clone);
