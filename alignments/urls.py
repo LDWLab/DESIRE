@@ -46,6 +46,7 @@ urlpatterns = [
     path('permutation-data-custom/', views.permutation_data_custom, name = 'permutation_data_custom'),
     path('propensities/<str:align_name>/<int:tax_group>', views.propensities, name = 'propensities'),
     path('propensities/<str:align_name>/<str:tax_group>', views.propensities, name = 'propensities'),
+    path('parse_hh_output_hit_lines/', views.parse_hh_output_hit_lines, name = 'parse_hh_output_hit_lines'),
     path('custom-struc-data/<str:strucID>', handleStructureRequests.handleCustomUploadStructure, name = 'custom_structure'),
     path('authEcodQuery', views.ecodPassThroughQuery, name = 'ecodQuery'),
     path('proOrigamiTopology/<str:topID>', handleStructureRequests.getTopology, name = 'proOrigamiTopology'),
@@ -72,5 +73,4 @@ urlpatterns = [
     path('getProteinNamesFilterByStrainIDAndProteinType/<int:strain_id>/<str:proteinType>', views.getProteinNamesFilterByStrainIDAndProteinTypeDirect, name = "getProteinNamesFilterByStrainIDAndProteinType"),
     path('getProteinNamesFilterByProteinType/<str:proteinType>', views.getProteinNamesFilterByProteinTypeDirect, name = "getProteinNamesFilterByProteinType"),
     path('getStrainInformationFilterByProteinName/<str:aln_name>', views.getStrainInformationFilterByProteinNameDirect, name = 'getStrainInformationFilterByProteinName'),
-    path('testHMMCode', views.testHMMCode, name = 'testHMMCode'),
 ]

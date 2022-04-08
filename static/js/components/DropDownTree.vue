@@ -164,12 +164,25 @@
                         MSA permutation indices:
                         <input type="text" id="permutation_indices_input" v-on:change="validatePermutationIndices();">
                     </section>
-                    <button id="downloadPermutationButton" v-on:click="downloadPermutation();">
-                        Download permuted alignment
-                    </button>
-                    <label id="invalidPermutationIndicesMessage" style="color:red;display:none;">
-                        Invalid indices!
-                    </label>
+                    <section>
+                        <button id="downloadPermutationButton" v-on:click="downloadPermutation();">
+                            Download permuted alignment
+                        </button>
+                    </section>
+                    <section>
+                        <button id="processPermutation" v-on:click="processPermutation();">
+                            Process permutation
+                        </button>
+                    </section>
+                    <section>
+                        <label id="invalidPermutationIndicesMessage" style="color:red;display:none;">
+                            Invalid indices!
+                        </label>
+                    </section>
+                    <section>
+                        <select id="permutationHitResultsSelect" class="btn btn-outline-dark dropdown-toggle" style="display:none" v-on:change="showPermutationWindows()">
+                        </select>
+                    </section>
                     <a id="downloadPermutationAnchor" style="display:none;">
                     </a>
                 </div>
@@ -843,35 +856,6 @@
             var viewerContainer = document.getElementById('pdbeMolstarView');
             viewerInstance.render(viewerContainer, options);
             window.viewerInstance = viewerInstance;
-
-            const molstar_item_clone = document.getElementById("pdbeMolstarViewClone");
-            if (molstar_item_clone) {
-                var pdblower_clone = "1lva";
-                molstar_item_clone.remove();
-                create_deleted_element("molif", "pdbeMolstarViewClone", "Loading Molstar Component ", true);
-                
-                var coordURL_clone = `https://coords.litemol.org/${pdblower_clone}/chains?entityId=1&authAsymId=A&encoding=bcif`;
-                var binaryCif_clone = true;
-                var structFormat_clone = "cif";
-                window.pdblower_clone = pdblower_clone;
-                var viewerInstanceClone = new PDBeMolstarPlugin();
-                var options_clone = {
-                    customData: {
-                        url: coordURL_clone,
-                        format: structFormat_clone, 
-                        binary: binaryCif_clone
-                    },
-                    hideCanvasControls: ["expand", "selection", " animation"],
-                    assemblyId: '1',
-                    hideControls: true,
-                    subscribeEvents: true,
-                    bgColor: {r:255,g:255,b:255},
-                    pv_events_suffix: "_clone"
-                }
-                var viewerContainerClone = document.getElementById('pdbeMolstarViewClone');
-                viewerInstanceClone.render(viewerContainerClone, options_clone);
-                window.viewerInstanceClone = viewerInstanceClone;
-            }
             
             document.addEventListener('PDB.topologyViewer.click', (e) => {
                 var molstar= viewerInstance;
@@ -956,6 +940,10 @@
             handlePropensities(checked_propensities);
         },downloadPermutation(){
             downloadPermutation();
+        },processPermutation(){
+            processPermutation();
+        },showPermutationWindows(){
+            showPermutationWindows();
         },validatePermutationIndices(){
             validatePermutationIndices();
         },initializePermutationIndices(checked_permutation){

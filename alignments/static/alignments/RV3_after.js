@@ -559,6 +559,97 @@ function handlePropensities(checked_propensities) {
     }
 }
 
+function processPermutation() {
+    var hh_output_hit_lines =
+    `1 e4upzB4 B:253-366 001318689 100.0 1.3E-39 2E-44 234.3 0.0 99 4-103 10-108 (114)
+    2 e1g7tA1 A:228-328 000021676 100.0 3.9E-38 6E-43 222.9 0.0 99 2-100 2-100 (101)
+    3 e4nclA2 A:229-322 001311919 100.0 9E-37 1.4E-41 213.9 0.0 89 4-93 6-94 (94)
+    4 e4byxV8 V:224-317 001160416 100.0 1.6E-36 2.4E-41 212.8 0.0 91 2-93 4-94 (94)
+    5 e4byrP2 P:227-339 001117994 100.0 3.1E-34 4.8E-39 205.6 0.0 100 3-103 2-101 (113)
+    6 e4upyB2 B:260-381 001318160 99.9 2.2E-31 3.4E-36 192.6 0.0 100 3-103 2-101 (122)
+    7 e1g7sA1 A:228-286,A:291-328 00 99.9 1.2E-27 1.8E-32 167.5 0.0 96 1-100 1-96 (97)
+    8 e4b43A2 A:244-355 001098013 99.6 8.9E-19 1.4E-23 125.9 0.0 85 2-103 1-86 (112)
+    9 e3izyP2 P:174-268 001031074 99.4 6.3E-17 9.7E-22 112.2 0.0 85 2-103 3-88 (95)`;
+    ajax('/parse_hh_output_hit_lines/', {hh_output_hit_lines}).then(parsed_hh_output_hit_lines => {
+        vm.parsed_hh_output_hit_lines = parsed_hh_output_hit_lines;
+        var permutationHitResultsSelect = document.getElementById("permutationHitResultsSelect");
+        parsed_hh_output_hit_lines.forEach(parsed_hh_output_hit_line => {
+            var new_option = document.createElement("option");
+            new_option.innerHTML = `${parsed_hh_output_hit_line.pdb_id} (${parsed_hh_output_hit_line.match_percentage}%)`;
+            new_option.value = new_option.innerHTML;
+            permutationHitResultsSelect.appendChild(new_option);
+        });
+        permutationHitResultsSelect.selectedIndex = -1;
+        permutationHitResultsSelect.style.display = "block";
+    });
+}
+
+function showPermutationWindows() {
+    var permutationHitResultsSelect = document.getElementById("permutationHitResultsSelect");
+    var selection = vm.parsed_hh_output_hit_lines[permutationHitResultsSelect.selectedIndex];
+    var pdbID_clone = selection.pdb_id.toUpperCase();
+    var chainID_clone = selection.chain_id
+    var range_0 = selection.range[0]
+    var mapping_clone = [range_0.start, range_0.stop];
+
+
+    var topview_clone = document.getElementById('topview_clone');
+    const molstar_item_clone = document.getElementById("pdbeMolstarViewClone");
+    var url = `https://www.ebi.ac.uk/pdbe/api/pdb/entry/polymer_coverage/${pdbID_clone}/chain/${chainID_clone}`;
+    pdbID_clone = pdbID_clone.toLocaleLowerCase();
+    var entityID_clone;
+    var show_windows = () => {
+        var topology_viewer = `<pdb-topology-viewer id="PdbeTopViewerClone" pv-aa-properties-variable-name=${"mapped_aa_properties_clone"} pv-selected-property-variable-name=${"selected_property_clone"} pv-suffix=${"_clone"} entry-id=${pdbID_clone} entity-id=${entityID_clone} chain-id=${chainID_clone} filter-range=${mapping_clone}></pdb-topology-viewer>`;//`<pdb-topology-viewer id="PdbeTopViewer" entry-id=${pdbID} entity-id=${entities.entityID} chain-id=${entities.chainID} pvapi="true" filter-range=1,100000></pdb-topology-viewer>`
+        topview_clone.innerHTML = topology_viewer;
+        window.viewerInstanceTopClone = document.getElementById("PdbeTopViewerClone");
+
+        molstar_item_clone.remove();
+        create_deleted_element("molif", "pdbeMolstarViewClone", "Loading Molstar Component ", true);
+        var coordURL_clone = `https://coords.litemol.org/${pdbID_clone}/chains?entityId=${entityID_clone}&authAsymId=${chainID_clone}&encoding=bcif`;
+        var binaryCif_clone = true;
+        var structFormat_clone = "cif";
+        window.pdblower_clone = pdbID_clone;
+        var viewerInstanceClone = new PDBeMolstarPlugin();
+        var options_clone = {
+            customData: {
+                url: coordURL_clone,
+                format: structFormat_clone, 
+                binary: binaryCif_clone
+            },
+            hideCanvasControls: ["expand", "selection", " animation"],
+            assemblyId: '1',
+            hideControls: true,
+            subscribeEvents: true,
+            bgColor: {r:255,g:255,b:255},
+            pv_events_suffix: "_clone"
+        }
+        var viewerContainerClone = document.getElementById('pdbeMolstarViewClone');
+        viewerInstanceClone.render(viewerContainerClone, options_clone);
+        window.viewerInstanceClone = viewerInstanceClone;
+    }
+    ajax(url).then(result => {
+        entityID_clone = result[pdbID_clone.toLowerCase()].molecules[0].entity_id;
+        show_windows();
+    }).catch(error => {
+        url = `https://www.ebi.ac.uk/pdbe/search/pdb/select?q=pdb_id%20:${pdbID_clone}`
+        ajax(url).then(result => {
+            if (result.response.numFound > 0) {
+                pdbID_clone = result.response.docs[0].superseded_by;
+                var base_url = `https://prodata.swmed.edu/ecod/complete/search?kw=${pdbID_clone}&target=domain`;
+                var get_page = url_suffix => {
+                    ajax(base_url + url_suffix).then(result => {
+                        
+                    });
+                };
+                get_page("");
+                // show_windows();
+            } else {
+
+            }
+        });
+    });
+}
+
 function downloadPermutation() {
     let
         customFasta = vm.fasta_data,
@@ -577,14 +668,18 @@ function downloadPermutation() {
 }
 
 function validatePermutationIndices() {
-    let downloadPermutationButton = document.getElementById("downloadPermutationButton");
+    let permutation_buttons = [document.getElementById("downloadPermutationButton"), document.getElementById("processPermutation")];
     let invalidPermutationIndicesMessage = document.getElementById("invalidPermutationIndicesMessage");
     let pass = () => {
-        downloadPermutationButton.disabled = false;
+        permutation_buttons.forEach(permutation_button => {
+            permutation_button.disabled = false;
+        });
         invalidPermutationIndicesMessage.style.display = "none";
     };
     let fail = (message="Invalid indices!") => {
-        downloadPermutationButton.disabled = true;
+        permutation_buttons.forEach(permutation_button => {
+            permutation_button.disabled = true;
+        });
         invalidPermutationIndicesMessage.textContent = message;
         invalidPermutationIndicesMessage.style.display = "block";
     };

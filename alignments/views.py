@@ -948,55 +948,98 @@ def parse_hh_output(hh_output_file_path):
     while (not pattern.match(lines[line_index])):
         line_index += 1
     title_line = lines[line_index]
-    index_of_start_of_no = title_line.index('No')
-    index_of_start_of_hit = title_line.index('Hit', index_of_start_of_no + len('No'))
-    index_of_start_of_prob = title_line.index('Prob', index_of_start_of_hit + len('Hit'))
-    index_of_start_of_e_value = title_line.index('E-value', index_of_start_of_prob + len('Prob'))
-    index_of_start_of_p_value = title_line.index('P-value', index_of_start_of_e_value + len('E-value'))
-    index_of_start_of_score = title_line.index('Score', index_of_start_of_p_value + len('P-value'))
-    index_of_start_of_ss = title_line.index('SS', index_of_start_of_score + len('Score'))
-    index_of_start_of_cols = title_line.index('Cols', index_of_start_of_ss + len('SS'))
-    index_of_start_of_query_hmm = title_line.index('Query HMM', index_of_start_of_cols + len('Cols'))
-    index_of_start_of_template_hmm = title_line.index('Template HMM', index_of_start_of_query_hmm + len('Query HMM'))
-    # Skip over the matching title line.
-    line_index += 1
-    start_data_lines_index = line_index
-    pattern = re.compile('^\\s*$')
-    while line_index < len(lines) and (not pattern.match(lines[line_index])):
-        line_index += 1
-    data_lines = lines[start_data_lines_index:line_index]
-    mapped_data = []
-    for data_line_index in range(len(data_lines)):
-        data_line = data_lines[data_line_index]
-        no_substring = data_line[index_of_start_of_no - 1 : index_of_start_of_hit - 1].strip()
-        hit_substring = data_line[index_of_start_of_hit - 1 : index_of_start_of_prob - 1].strip()
-        prob_substring = data_line[index_of_start_of_prob - 1 : index_of_start_of_e_value - 1].strip()
-        e_value_substring = data_line[index_of_start_of_e_value - 1 : index_of_start_of_p_value - 1].strip()
-        p_value_substring = data_line[index_of_start_of_p_value - 1 : index_of_start_of_score - 1].strip()
-        score_substring = data_line[index_of_start_of_score - 1 : index_of_start_of_ss - 1].strip()
-        ss_substring = data_line[index_of_start_of_ss - 1 : index_of_start_of_cols - 1].strip()
-        cols_substring = data_line[index_of_start_of_cols - 1 : index_of_start_of_query_hmm - 1].strip()
-        query_hmm_substring = data_line[index_of_start_of_query_hmm - 1 : index_of_start_of_template_hmm - 1].strip()
-        template_hmm_substring = data_line[index_of_start_of_template_hmm - 1 :].strip()
-        mapped_data += [{
-            'No' : int(no_substring),
-            'Hit' : hit_substring,
-            'Prob' : float(prob_substring),
-            'E-value' : float(e_value_substring),
-            'P-value' : float(p_value_substring),
-            'Score' : float(score_substring),
-            'SS' : float(ss_substring),
-            'Cols' : int(cols_substring),
-            'Query HMM' : query_hmm_substring,
-            'Template HMM' : template_hmm_substring,
-        }]
-    return mapped_data
 
-def testHMMCode(request):
-    hhalign_output_file_path = './static/a.hhr'
-    parsed = parse_hh_output(hhalign_output_file_path)
-    hhsearch_output_file_path = './static/b.hhr'
-    parsed = parse_hh_output(hhsearch_output_file_path)
+def parse_hh_output_hit_lines(request):
+    hh_output_hit_lines_variable_name = "hh_output_hit_lines"
+    if request.method != "POST" or hh_output_hit_lines_variable_name not in request.POST:
+        raise ValueError()
+    hh_output_hit_lines = request.POST[hh_output_hit_lines_variable_name].split("\n")
+    parsed_output = []
+    pattern = '^\s*(\d+)\s*e([\d\w]+)(\w)(\d+)\s+\w:(\d+)\s*-\s*(\d+)((?:\s*,\s*\w:\d+\s*-\s*\d+\s*)*)\s+\d+\s+([\d\.]+)'
+    for line_index, line in enumerate(hh_output_hit_lines):
+        regex_results = re.search(pattern, line)
+        if regex_results is None:
+            raise ValueError(f"The hh output line #{line_index} does not match the expected hit format. Its results could not be parsed.")
+        regex_results_groups = regex_results.groups()
+        start_variable_name = "start"
+        stop_variable_name = "stop"
+        _range = [{
+            start_variable_name: int(regex_results_groups[4]),
+            stop_variable_name: int(regex_results_groups[5])
+        }]
+        extended_range_string = regex_results_groups[6]
+        extended_range_string = re.sub("^[\s,]+", "", extended_range_string)
+        extended_range_string = re.sub("[\s,]+$", "", extended_range_string)
+        if len(extended_range_string) > 0:
+            for range_portion in extended_range_string.split(","):
+                range_portion_regex = re.search("\s*(\d+)\s*-\s*(\d+)", range_portion)
+                range_portion_regex_groups = range_portion_regex.groups()
+                _range.append({
+                    start_variable_name: int(range_portion_regex_groups[0]),
+                    stop_variable_name: int(range_portion_regex_groups[1])
+                })
+        parsed_output.append({
+            "hit_no": int(regex_results_groups[0]),
+            "pdb_id": regex_results_groups[1],
+            "chain_id": regex_results_groups[2],
+            "entity_id": int(regex_results_groups[3]),
+            "range": _range,
+            "match_percentage": float(regex_results_groups[7])
+        })
+    return JsonResponse(parsed_output, safe=False)
+
+# def parse_hh_output(hh_output_file_path):
+#     file_handler = open(hh_output_file_path, 'r')
+#     lines = file_handler.readlines()
+#     file_handler.close()
+#     pattern = re.compile('^\\s*No\\s+Hit\\s+Prob\\s+E-value\\s+P-value\\s+Score\\s+SS\\s+Cols\\s+Query HMM\\s+Template HMM\\s*$')
+#     line_index = 0
+#     while (not pattern.match(lines[line_index])):
+#         line_index += 1
+#     title_line = lines[line_index]
+#     index_of_start_of_no = title_line.index('No')
+#     index_of_start_of_hit = title_line.index('Hit', index_of_start_of_no + len('No'))
+#     index_of_start_of_prob = title_line.index('Prob', index_of_start_of_hit + len('Hit'))
+#     index_of_start_of_e_value = title_line.index('E-value', index_of_start_of_prob + len('Prob'))
+#     index_of_start_of_p_value = title_line.index('P-value', index_of_start_of_e_value + len('E-value'))
+#     index_of_start_of_score = title_line.index('Score', index_of_start_of_p_value + len('P-value'))
+#     index_of_start_of_ss = title_line.index('SS', index_of_start_of_score + len('Score'))
+#     index_of_start_of_cols = title_line.index('Cols', index_of_start_of_ss + len('SS'))
+#     index_of_start_of_query_hmm = title_line.index('Query HMM', index_of_start_of_cols + len('Cols'))
+#     index_of_start_of_template_hmm = title_line.index('Template HMM', index_of_start_of_query_hmm + len('Query HMM'))
+#     # Skip over the matching title line.
+#     line_index += 1
+#     start_data_lines_index = line_index
+#     pattern = re.compile('^\\s*$')
+#     while line_index < len(lines) and (not pattern.match(lines[line_index])):
+#         line_index += 1
+#     data_lines = lines[start_data_lines_index:line_index]
+#     mapped_data = []
+#     for data_line_index in range(len(data_lines)):
+#         data_line = data_lines[data_line_index]
+#         no_substring = data_line[index_of_start_of_no - 1 : index_of_start_of_hit - 1].strip()
+#         hit_substring = data_line[index_of_start_of_hit - 1 : index_of_start_of_prob - 1].strip()
+#         prob_substring = data_line[index_of_start_of_prob - 1 : index_of_start_of_e_value - 1].strip()
+#         e_value_substring = data_line[index_of_start_of_e_value - 1 : index_of_start_of_p_value - 1].strip()
+#         p_value_substring = data_line[index_of_start_of_p_value - 1 : index_of_start_of_score - 1].strip()
+#         score_substring = data_line[index_of_start_of_score - 1 : index_of_start_of_ss - 1].strip()
+#         ss_substring = data_line[index_of_start_of_ss - 1 : index_of_start_of_cols - 1].strip()
+#         cols_substring = data_line[index_of_start_of_cols - 1 : index_of_start_of_query_hmm - 1].strip()
+#         query_hmm_substring = data_line[index_of_start_of_query_hmm - 1 : index_of_start_of_template_hmm - 1].strip()
+#         template_hmm_substring = data_line[index_of_start_of_template_hmm - 1 :].strip()
+#         mapped_data += [{
+#             'No' : int(no_substring),
+#             'Hit' : hit_substring,
+#             'Prob' : float(prob_substring),
+#             'E-value' : float(e_value_substring),
+#             'P-value' : float(p_value_substring),
+#             'Score' : float(score_substring),
+#             'SS' : float(ss_substring),
+#             'Cols' : int(cols_substring),
+#             'Query HMM' : query_hmm_substring,
+#             'Template HMM' : template_hmm_substring,
+#         }]
+#     return mapped_data
 
 def propensities(request, align_name, tax_group):
     aln_id = Alignment.objects.filter(name = align_name)[0].aln_id

@@ -1884,11 +1884,11 @@ var __awaiter = this && this.__awaiter || function (t, s, a, h) {
                 e.handleProtvistaEvents(t, "mouseover")
             }), document.addEventListener("protvista-mouseout", function () {
                 e.svgEle.selectAll(".residueHighlight").remove()
-            }), document.addEventListener("PDB.molstar.click", function (t) {
+            }), document.addEventListener("PDB.molstar" + e.suffix + ".click", function (t) {
                 e.handleMolstarEvents(t, "click")
-            }), document.addEventListener("PDB.molstar.mouseover", function (t) {
+            }), document.addEventListener("PDB.molstar" + e.suffix + ".mouseover", function (t) {
                 e.handleMolstarEvents(t, "mouseover")
-            }), document.addEventListener("PDB.molstar.mouseout", function () {
+            }), document.addEventListener("PDB.molstar" + e.suffix + ".mouseout", function () {
                 e.svgEle.selectAll(".residueHighlight").remove()
             })
         }, t
