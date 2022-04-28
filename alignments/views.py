@@ -10,6 +10,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse, HttpResponseServerError, HttpResponseForbidden
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
+import requests
 
 from alignments.models import *
 from alignments.taxonomy_views import *
@@ -1045,10 +1046,20 @@ def parse_hh_output_hit_lines(request):
 def proxy(request):
     url = request.GET['url']
     domain = urlparse(url).netloc
+    domain_list = ['prodata.swmed.edu']
     if domain not in domain_list:
         return HttpResponseForbidden(
-            "This proxy is for www.ebi.ac.uk, wwwdev.ebi.ac.uk, mirbase.org, rfam.org or rna.bgsu.edu only."
+            "This proxy is only for " + ", ".join(domain_list) + "."
         )
+    try:
+        proxied_response = requests.get(url)
+        if proxied_response.status_code == 200:
+            response = HttpResponse(proxied_response.text)
+            return response
+        else:
+            raise Http404
+    except:
+        raise Http404
 
 def propensities(request, align_name, tax_group):
     aln_id = Alignment.objects.filter(name = align_name)[0].aln_id
