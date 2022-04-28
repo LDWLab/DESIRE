@@ -14,6 +14,7 @@ package-lock.json
 webpack-stats.json
 populate_db/Alignments/missed_seqs/*
 pdb-topology-viewer/node_modules/*
+pdbe-molstar-viewer/*
 react-msa-viewer/node_modules/*
 react-msa-viewer/dist/*
 DESIRE/settings.py
