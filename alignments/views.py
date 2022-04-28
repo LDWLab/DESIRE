@@ -957,7 +957,7 @@ def parse_hh_output_hit_lines(request):
         raise ValueError()
     hh_output_hit_lines = request.POST[hh_output_hit_lines_variable_name].split("\n")
     parsed_output = []
-    pattern = '^\s*(\d+)\s*e([\d\w]+)(\w)(\d+)\s+\w:(\d+)\s*-\s*(\d+)((?:\s*,\s*\w:\d+\s*-\s*\d+\s*)*)\s+\d+\s+([\d\.]+)'
+    pattern = '^\s*(\d+)\s*e([\d\w]{4})([\d\w]+)(\d)\s+\w:(\d+)\s*-\s*(\d+)((?:\s*,\s*\w:\d+\s*-\s*\d+\s*)*)\s+\d+\s+([\d\.]+)'
     for line_index, line in enumerate(hh_output_hit_lines):
         regex_results = re.search(pattern, line)
         if regex_results is None:
@@ -984,7 +984,7 @@ def parse_hh_output_hit_lines(request):
             "hit_no": int(regex_results_groups[0]),
             "pdb_id": regex_results_groups[1],
             "chain_id": regex_results_groups[2],
-            "entity_id": int(regex_results_groups[3]),
+            "pseudo_entity_id": int(regex_results_groups[3]),
             "range": _range,
             "match_percentage": float(regex_results_groups[7])
         })
@@ -1052,6 +1052,9 @@ def proxy(request):
             "This proxy is only for " + ", ".join(domain_list) + "."
         )
     try:
+        # http://prodata.swmed.edu/ecod/complete/search?kw=4upz&target=domain&page=4
+        if domain == 'prodata.swmed.edu':
+            url += '&target=' + request.GET['target'] + '&page=' + request.GET['page']
         proxied_response = requests.get(url)
         if proxied_response.status_code == 200:
             response = HttpResponse(proxied_response.text)

@@ -591,7 +591,7 @@ function showPermutationWindows() {
     var chainID_clone = selection.chain_id
     var range_0 = selection.range[0]
     var mapping_clone = [range_0.start, range_0.stop];
-
+    var pseudo_entity_id = selection.pseudo_entity_id;
 
     var topview_clone = document.getElementById('topview_clone');
     topview_clone.style.width = "500";
@@ -635,22 +635,63 @@ function showPermutationWindows() {
         entityID_clone = result[pdbID_clone.toLowerCase()].molecules[0].entity_id;
         show_windows();
     }).catch(error => {
-        url = `https://www.ebi.ac.uk/pdbe/search/pdb/select?q=pdb_id%20:${pdbID_clone}`
-        ajax(url).then(result => {
-            if (result.response.numFound > 0) {
-                pdbID_clone = result.response.docs[0].superseded_by;
-                var base_url = `http://prodata.swmed.edu/ecod/complete/search?kw=${pdbID_clone}&target=domain`;
-                var get_page = url_suffix => {
-                    ajax(base_url + url_suffix).then(result => {
-                        
-                    });
-                };
-                get_page("");
-                // show_windows();
-            } else {
-
-            }
-        });
+        var base_url = window.location.href + `proxy/?url=http://prodata.swmed.edu/ecod/complete/search?kw=${pdbID_clone}&target=domain&page=`;
+        var upper_table_entries = [];
+        var lower_table_entries = [];
+        var parse_table = function(table_dom, table_entries) {
+            let table_dom_children = Array.from(table_dom.childNodes);
+            let tr = table_dom_children.filter(input_table_child => input_table_child.nodeName === "THEAD")[0].childNodes[0];
+            let table_headers = Array.from(tr.childNodes).filter(childNode => childNode.nodeName === "TH").map(child_node => child_node.textContent.trim());
+            
+            let tbody = table_dom_children.filter(input_table_child => input_table_child.nodeName === "TBODY")[0];
+            Array.from(tbody.childNodes).filter(childNode => childNode.nodeName === "TR").forEach(table_row => {
+                let table_entry = {};
+                table_entries.push(table_entry);
+                Array.from(table_row.childNodes).filter(childNode => childNode.nodeName === "TD").forEach((table_row_entry, column_index) => {
+                    table_entry[table_headers[column_index]] = table_row_entry.textContent;
+                });
+            });
+        };
+        var populate_tables = function(page_number) {
+            console.log(`page #${page_number}`);
+            var xhttp = new XMLHttpRequest();
+            xhttp.onload = function() {
+                let parsed_HTML = new DOMParser().parseFromString(this.responseText, "text/html");
+                let all_tables = parsed_HTML.querySelectorAll("table");
+                switch (all_tables.length) {
+                    case 0:
+                        // Do nothing.
+                        break;
+                    case 1:
+                        let table_entries = this.responseText.indexOf("is obsolete and superseded by") < this.responseText.indexOf("<table>") ? upper_table_entries : lower_table_entries;
+                        parse_table(all_tables[0], table_entries);
+                        populate_tables(page_number + 1);
+                        break;
+                    case 2:
+                        parse_table(all_tables[0], upper_table_entries);
+                        parse_table(all_tables[1], lower_table_entries);
+                        populate_tables(page_number + 1);
+                        break;
+                }
+            };
+            xhttp.open("GET", base_url + page_number, false);
+            xhttp.send();
+        }
+        populate_tables(1);
+        var query_domain_id = `e${pdbID_clone}${chainID_clone}${pseudo_entity_id}`;
+        var domain_id_variable_name = "Domain ID";
+        var f_group_name_variable_name = "F Group Name";
+        upper_table_entries = upper_table_entries.filter(upper_table_entry => upper_table_entry[domain_id_variable_name] === query_domain_id);
+        lower_table_entries = lower_table_entries.filter(lower_table_entry => upper_table_entries.some(upper_table_entry => lower_table_entry[f_group_name_variable_name] === upper_table_entry[f_group_name_variable_name]));
+        if (lower_table_entries.length == 0) {
+            throw "No obsolete-structure matching could resolve this obsolete structure.";
+        } else {
+            var match = lower_table_entries[0]["Domain ID"].match(/^e([\d\w]{4})([\d\w]+)(\d)$/);
+            pdbID_clone = match[1];
+            chainID_clone = match[2];
+            entityID_clone = match[3];
+            show_windows();
+        }
     });
 }
 
