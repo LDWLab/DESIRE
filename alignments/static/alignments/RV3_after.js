@@ -594,7 +594,11 @@ function showPermutationWindows() {
 
 
     var topview_clone = document.getElementById('topview_clone');
+    topview_clone.style.width = "500";
+    topview_clone.style.height = "500";
     const molstar_item_clone = document.getElementById("pdbeMolstarViewClone");
+    molstar_item_clone.style.width = "500";
+    molstar_item_clone.style.height = "500";
     var url = `https://www.ebi.ac.uk/pdbe/api/pdb/entry/polymer_coverage/${pdbID_clone}/chain/${chainID_clone}`;
     pdbID_clone = pdbID_clone.toLocaleLowerCase();
     var entityID_clone;
@@ -635,7 +639,7 @@ function showPermutationWindows() {
         ajax(url).then(result => {
             if (result.response.numFound > 0) {
                 pdbID_clone = result.response.docs[0].superseded_by;
-                var base_url = `https://prodata.swmed.edu/ecod/complete/search?kw=${pdbID_clone}&target=domain`;
+                var base_url = `http://prodata.swmed.edu/ecod/complete/search?kw=${pdbID_clone}&target=domain`;
                 var get_page = url_suffix => {
                     ajax(base_url + url_suffix).then(result => {
                         

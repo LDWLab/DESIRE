@@ -35,6 +35,7 @@ class PdbTopologyViewerPlugin {
     sequenceArr: string[];
     entityId: string;
     entryId: string;
+    pv_suffix: string;
     //filterRange: string;
     alreadyRan: boolean;
     chainId: string;
@@ -54,7 +55,7 @@ class PdbTopologyViewerPlugin {
     pvAPI = false;
     subscribeEvents = true;
 
-    render(target: HTMLElement, options:{entityId: string, entryId: string, filterRange?: string, chainId?: string, subscribeEvents?:boolean, displayStyle?: string, errorStyle?: string, menuStyle?: string, pvAPI?: boolean}) {
+    render(target: HTMLElement, options:{entityId: string, entryId: string, filterRange?: string, chainId?: string, subscribeEvents?:boolean, displayStyle?: string, errorStyle?: string, menuStyle?: string, pvAPI?: boolean, pv_suffix?: string}) {
         if(options && typeof options.displayStyle != 'undefined' && options.displayStyle != null) this.displayStyle += options.displayStyle;
         if(options && typeof options.errorStyle != 'undefined' && options.errorStyle != null) this.errorStyle += options.errorStyle;
         if(options && typeof options.menuStyle != 'undefined' && options.menuStyle != null) this.menuStyle += options.menuStyle;
@@ -70,6 +71,7 @@ class PdbTopologyViewerPlugin {
         if(options.pvAPI == true) this.pvAPI = true;
         this.entityId = options.entityId;
         this.entryId = options.entryId.toLowerCase();
+        this.pv_suffix = options.pv_suffix ?? "";
         //If chain id is not provided then get best chain id from observed residues api
         if(typeof options.chainId == 'undefined' || options.chainId == null){
             this.getObservedResidues(this.entryId).then((result) => {
@@ -100,7 +102,7 @@ class PdbTopologyViewerPlugin {
                     }
                     this.apiData = result;
                     //default pdb events
-		    	    this.pdbevents = this.createNewEvent(['PDB.topologyViewer.click','PDB.topologyViewer.mouseover','PDB.topologyViewer.mouseout']);
+		    	    this.pdbevents = this.createNewEvent([`PDB.topologyViewer${this.pv_suffix}.click`,`PDB.topologyViewer${this.pv_suffix}.mouseover`,`PDB.topologyViewer${this.pv_suffix}.mouseout`]);
                     this.getPDBSequenceArray(this.apiData[0][this.entryId]);
                     this.drawTopologyStructures();
                     this.createDomainDropdown();
@@ -431,7 +433,7 @@ class PdbTopologyViewerPlugin {
         //Dispatch custom click event
         
         if(masked_array[eleObj.residue_number - 1] == true) {
-            this.dispatchEvent('PDB.topologyViewer.click', {
+            this.dispatchEvent(`PDB.topologyViewer${this.pv_suffix}.click`, {
                 residueNumber: eleObj.residue_number,
                 type: eleObj.type,
                 entryId: this.entryId,
@@ -468,7 +470,7 @@ class PdbTopologyViewerPlugin {
             //document.querySelector('#imageaef08aed83').appendChild(newLine)
         
             //Dispatch custom mouseover event
-            this.dispatchEvent('PDB.topologyViewer.mouseover', {
+            this.dispatchEvent(`PDB.topologyViewer${this.pv_suffix}.mouseover`, {
                 residueNumber: eleData.residue_number,
                 type: eleData.type,
                 entryId: this.entryId,
@@ -512,7 +514,7 @@ class PdbTopologyViewerPlugin {
         }
         
         //Dispatch custom mouseover event
-        this.dispatchEvent('PDB.topologyViewer.mouseout', {
+        this.dispatchEvent(`PDB.topologyViewer${this.pv_suffix}.mouseout`, {
             filterRange: filterRange,
             entryId: this.entryId,
             entityId: this.entityId,
@@ -1887,13 +1889,13 @@ class PdbTopologyViewerPlugin {
         });
 
         //molstar viewer events
-        document.addEventListener('PDB.molstar.click', (e:any) => {
+        document.addEventListener(`PDB.molstar${this.pv_suffix}.click`, (e:any) => {
             this.handleMolstarEvents(e, 'click');
         });
-        document.addEventListener('PDB.molstar.mouseover', (e:any) => {
+        document.addEventListener(`PDB.molstar${this.pv_suffix}.mouseover`, (e:any) => {
             this.handleMolstarEvents(e, 'mouseover');
         });
-        document.addEventListener('PDB.molstar.mouseout', () => {
+        document.addEventListener(`PDB.molstar${this.pv_suffix}.mouseout`, () => {
             this.svgEle.selectAll('.residueHighlight').remove();
         });
         

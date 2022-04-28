@@ -53,6 +53,8 @@ export function initialState (){
         checked_customMap: false,
         selected_property: null,
         selected_property_clone: null,
+        protein_types: [],
+        protein_type_obj: null,
         csv_data: null,
         custom_headers: [],
         raiseCustomCSVWarn: null,

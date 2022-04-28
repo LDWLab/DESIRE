@@ -7,7 +7,7 @@ from Bio import AlignIO, BiopythonDeprecationWarning
 from io import StringIO
 
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse, HttpResponseServerError
+from django.http import HttpResponse, JsonResponse, HttpResponseServerError, HttpResponseForbidden
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
 
@@ -19,6 +19,7 @@ from alignments.fold_api import *
 import alignments.alignment_query_and_build as aqab
 from TwinCons.bin.TwinCons import slice_by_name
 from django.db import connection
+from urllib.parse import urlparse
 
 def trim_alignment(concat_fasta, filter_strain):
     '''Reads a fasta string into alignment and trims it down by filter sequence'''
@@ -1040,6 +1041,14 @@ def parse_hh_output_hit_lines(request):
 #             'Template HMM' : template_hmm_substring,
 #         }]
 #     return mapped_data
+
+def proxy(request):
+    url = request.GET['url']
+    domain = urlparse(url).netloc
+    if domain not in domain_list:
+        return HttpResponseForbidden(
+            "This proxy is for www.ebi.ac.uk, wwwdev.ebi.ac.uk, mirbase.org, rfam.org or rna.bgsu.edu only."
+        )
 
 def propensities(request, align_name, tax_group):
     aln_id = Alignment.objects.filter(name = align_name)[0].aln_id

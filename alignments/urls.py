@@ -3,6 +3,7 @@ from django.urls import include, path
 from django.views.generic.base import RedirectView
 from django.contrib.staticfiles.storage import staticfiles_storage
 from . import views
+from django.conf.urls import url
 
 app_name = 'alignments'
 
@@ -73,4 +74,5 @@ urlpatterns = [
     path('getProteinNamesFilterByStrainIDAndProteinType/<int:strain_id>/<str:proteinType>', views.getProteinNamesFilterByStrainIDAndProteinTypeDirect, name = "getProteinNamesFilterByStrainIDAndProteinType"),
     path('getProteinNamesFilterByProteinType/<str:proteinType>', views.getProteinNamesFilterByProteinTypeDirect, name = "getProteinNamesFilterByProteinType"),
     path('getStrainInformationFilterByProteinName/<str:aln_name>', views.getStrainInformationFilterByProteinNameDirect, name = 'getStrainInformationFilterByProteinName'),
+    url('proxy/?', views.proxy, name='proxy')
 ]
