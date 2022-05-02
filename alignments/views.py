@@ -835,10 +835,7 @@ def propensity_data(request, aln_id, tax_group):
     }
     return JsonResponse(data)
 
-def permutation_data_custom(request):
-    return permutation_data(request, None, None)
-
-def permutation_data(request, aln_id, tax_group):
+def permutation_data(request):
     from io import StringIO
     from Bio import AlignIO
     fasta_variable_name = 'customFasta'
@@ -895,31 +892,24 @@ def permutation_data(request, aln_id, tax_group):
             new_alignment[row_index].id = re.sub('([^_]*)_?$', r'\1_', new_alignment[row_index].id) + label_suffix[:-2]
             new_alignment[row_index].description = ""
     permutation_string = StringIO(format(new_alignment, 'fasta')).getvalue()
-    # request.FILES['permuted_fasta'] = permutation_string
 
     now = datetime.datetime.now()
     fileNameSuffix = "_" + str(now.year) + "_" + str(now.month) + "_" + str(now.day) + "_" + str(now.hour) + "_" + str(now.minute) + "_" + str(now.second) + "_" + str(now.microsecond)
-    # alignmentFilePath = "./static/permuted_alignment" + fileNameSuffix + ".fasta"
+    write_to_location = "/home/Desire-DEV/PVDev/static/"
+    alignmentFilePath = write_to_location + "permuted_alignment" + fileNameSuffix + ".fasta"
 
-    # hhblits
-    # command: /usr/local/bin/hh-suite/bin/hhsearch -i /home/blastdb/alignments/beta_barrels/OB_aIF1.fa -d /home/blastdb/ecod_F_fasta/ecod215/ecod215_numk3 -maxres 550000 -o OB_aIF1.txt -M 50 -add_cons
-    # /usr/local/bin/hh-suite/bin/hhsearch -i /home/blastdb/ecod_F_fasta/test.fa -d /home/blastdb/ecod_F_fasta/ecodFam -maxres 550000 -o test.hhr
-    # Convert to standard JSON:
-    # NOTE: add any installed prerequisites to the README.md (/DESIRE/README.md)
+    fh = open(alignmentFilePath, "w")
+    fh.write(permutation_string)
+    fh.close()
 
-    # fh = open(alignmentFilePath, "w")
-    # fh.write(permutation_string)
-    # fh.close()
+    hhalignOutputFilePath = write_to_location + "test.hhr" + fileNameSuffix
+    # return JsonResponse("Output path: " + hhalignOutputFilePath, safe = False)
+    output = hhalign(alignmentFilePath, "/home/blastdb/ecodf/ecod_version20220113/20220113/e4gvlA4.hhm", hhalignOutputFilePath)
 
-    # hhsearchOutputFilePath = './static/test.hhr' + fileNameSuffix
-    # hhsearch(alignmentFilePath, '/home/blastdb/ecod_F_fasta/ecodFam', hhsearchOutputFilePath, 550000, 50, False, True)
+    os.remove(alignmentFilePath)
+    os.remove(hhalignOutputFilePath)
 
-    # os.remove(alignmentFilePath)
-    # os.remove(hhsearchOutputFilePath)
-
-    # response = HttpResponse(permutation_string, content_type="text/plain")
-    response = JsonResponse(permutation_string, safe = False)
-    return response
+    return output
 
 def hhsearch(input_file_path, input_database_path, output_file_path, max_residues=550000, threshold_percentage=None, add_cons_flag=True, parse_output_flag=False):
     if (max_residues <= 0):
@@ -935,29 +925,29 @@ def hhsearch(input_file_path, input_database_path, output_file_path, max_residue
     if (parse_output_flag):
         return parse_hh_output(output_file_path)
 
-def hhalign(input_query_file_path, input_template_file_path, output_file_path, parse_output_flag = False):
-    hhalign_command = '/usr/local/bin/hh-suite/bin/hhsearch -i' + input_query_file_path + ' -t ' + input_template_file_path + ' -o ' + output_file_path
+def hhalign(input_query_file_path, input_template_file_path, output_file_path):
+    hhalign_command = '/usr/local/bin/hh-suite/bin/hhalign -i ' + input_query_file_path + ' -t ' + input_template_file_path + ' -o ' + output_file_path + ' No Hit Prob E-value P-value Score SS Cols'
     os.system(hhalign_command)
-    if (parse_output_flag):
-        return parse_hh_output(output_file_path)
+    return parse_hh_output(output_file_path)
 
 def parse_hh_output(hh_output_file_path):
     file_handler = open(hh_output_file_path, 'r')
     lines = file_handler.readlines()
     file_handler.close()
-    pattern = re.compile('^\\s*No\\s+Hit\\s+Prob\\s+E-value\\s+P-value\\s+Score\\s+SS\\s+Cols\\s+Query HMM\\s+Template HMM\\s*$')
-    line_index = 0
-    while (not pattern.match(lines[line_index])):
-        line_index += 1
-    title_line = lines[line_index]
+    hit_lines = []
+    for index, line in enumerate(lines):
+        if re.match('\s*No\s+Hit\s+Prob\s+E-value\s+P-value\s+Score\s+SS\s+Cols\s+Query\s+HMM\s+Template\s+HMM\s*', line):
+            for line in lines[index + 1:]:
+                if re.match('^\s*$', line):
+                    # Stop at the empty line.
+                    break
+                hit_lines.append(line.strip())
+            break
+    return parse_hh_output_hit_lines(hit_lines)
 
-def parse_hh_output_hit_lines(request):
-    hh_output_hit_lines_variable_name = "hh_output_hit_lines"
-    if request.method != "POST" or hh_output_hit_lines_variable_name not in request.POST:
-        raise ValueError()
-    hh_output_hit_lines = request.POST[hh_output_hit_lines_variable_name].split("\n")
+def parse_hh_output_hit_lines(hh_output_hit_lines):
     parsed_output = []
-    pattern = '^\s*(\d+)\s*e([\d\w]{4})([\d\w]+)(\d)\s+\w:(\d+)\s*-\s*(\d+)((?:\s*,\s*\w:\d+\s*-\s*\d+\s*)*)\s+\d+\s+([\d\.]+)'
+    pattern = '^\s*(\d+)\s*e([\d\w]{4})([\d\w]+)(\d)\s+\w+:(\d+)\s*-\s*(\d+)((?:\s*,\s*\w:\d+\s*-\s*\d+\s*)*)\s+\d+\s+([\d\.]+)'
     for line_index, line in enumerate(hh_output_hit_lines):
         regex_results = re.search(pattern, line)
         if regex_results is None:

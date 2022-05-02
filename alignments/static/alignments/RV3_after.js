@@ -560,17 +560,9 @@ function handlePropensities(checked_propensities) {
 }
 
 function processPermutation() {
-    var hh_output_hit_lines =
-    `1 e4upzB4 B:253-366 001318689 100.0 1.3E-39 2E-44 234.3 0.0 99 4-103 10-108 (114)
-    2 e1g7tA1 A:228-328 000021676 100.0 3.9E-38 6E-43 222.9 0.0 99 2-100 2-100 (101)
-    3 e4nclA2 A:229-322 001311919 100.0 9E-37 1.4E-41 213.9 0.0 89 4-93 6-94 (94)
-    4 e4byxV8 V:224-317 001160416 100.0 1.6E-36 2.4E-41 212.8 0.0 91 2-93 4-94 (94)
-    5 e4byrP2 P:227-339 001117994 100.0 3.1E-34 4.8E-39 205.6 0.0 100 3-103 2-101 (113)
-    6 e4upyB2 B:260-381 001318160 99.9 2.2E-31 3.4E-36 192.6 0.0 100 3-103 2-101 (122)
-    7 e1g7sA1 A:228-286,A:291-328 00 99.9 1.2E-27 1.8E-32 167.5 0.0 96 1-100 1-96 (97)
-    8 e4b43A2 A:244-355 001098013 99.6 8.9E-19 1.4E-23 125.9 0.0 85 2-103 1-86 (112)
-    9 e3izyP2 P:174-268 001031074 99.4 6.3E-17 9.7E-22 112.2 0.0 85 2-103 3-88 (95)`;
-    ajax('/parse_hh_output_hit_lines/', {hh_output_hit_lines}).then(parsed_hh_output_hit_lines => {
+    let customFasta = vm.fasta_data;
+    let indices = document.getElementById("permutation_indices_input").value;
+    ajax(/permutation-data/, {customFasta, indices}).then(parsed_hh_output_hit_lines => {
         vm.parsed_hh_output_hit_lines = parsed_hh_output_hit_lines;
         var permutationHitResultsSelect = document.getElementById("permutationHitResultsSelect");
         parsed_hh_output_hit_lines.forEach(parsed_hh_output_hit_line => {
