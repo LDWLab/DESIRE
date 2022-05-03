@@ -902,8 +902,7 @@ def permutation_data(request):
     fh.write(permutation_string)
     fh.close()
 
-    hhalignOutputFilePath = write_to_location + "test.hhr" + fileNameSuffix
-    # return JsonResponse("Output path: " + hhalignOutputFilePath, safe = False)
+    hhalignOutputFilePath = write_to_location + "test" + fileNameSuffix + ".hhr"
     output = hhalign(alignmentFilePath, "/home/blastdb/ecodf/ecod_version20220113/20220113/e4gvlA4.hhm", hhalignOutputFilePath)
 
     os.remove(alignmentFilePath)
@@ -911,7 +910,7 @@ def permutation_data(request):
 
     return output
 
-def hhsearch(input_file_path, input_database_path, output_file_path, max_residues=550000, threshold_percentage=None, add_cons_flag=True, parse_output_flag=False):
+def hhsearch(input_file_path, input_database_path, output_file_path, max_residues=550000, threshold_percentage=None, add_cons_flag=True):
     if (max_residues <= 0):
         raise ValueError('The input max_residues value must be greater than zero')
     hhsearch_command = '/usr/local/bin/hh-suite/bin/hhsearch -i ' + input_file_path + ' -d ' + input_database_path + ' -o ' + output_file_path  + ' -maxres ' + str(max_residues)
@@ -922,22 +921,38 @@ def hhsearch(input_file_path, input_database_path, output_file_path, max_residue
     if add_cons_flag:
         hhsearch_command += ' -add_cons'
     os.system(hhsearch_command)
-    if (parse_output_flag):
-        return parse_hh_output(output_file_path)
+    return parse_hh_output_file(output_file_path)
 
 def hhalign(input_query_file_path, input_template_file_path, output_file_path):
     hhalign_command = '/usr/local/bin/hh-suite/bin/hhalign -i ' + input_query_file_path + ' -t ' + input_template_file_path + ' -o ' + output_file_path + ' No Hit Prob E-value P-value Score SS Cols'
     os.system(hhalign_command)
-    return parse_hh_output(output_file_path)
+    return parse_hh_output_file(output_file_path)
 
-def parse_hh_output(hh_output_file_path):
+def parse_hh_output(request):
+    hh_output_variable_name = "hh_output"
+    if request.method == 'POST' and hh_output_variable_name in request.POST:
+        hh_output = request.POST[hh_output_variable_name].split("\n")
+        return parse_hh_output_lines(hh_output)
+
+# def parse_hh_output(request):
+#     output_variable_name = "foo"
+#     return JsonResponse("method: " + str(request.method) + "\nvar in POST? : " + str(output_variable_name in request.POST), safe=False)
+#     if request.method != "POST" or not (output_variable_name in request.POST):
+#         raise ValueError()
+#     output = request.POST[output_variable_name]
+#     return parse_hh_output_lines(output.split("\n"))
+
+def parse_hh_output_file(hh_output_file_path):
     file_handler = open(hh_output_file_path, 'r')
     lines = file_handler.readlines()
     file_handler.close()
+    return parse_hh_output_lines(lines)
+
+def parse_hh_output_lines(hh_output_lines):
     hit_lines = []
-    for index, line in enumerate(lines):
+    for index, line in enumerate(hh_output_lines):
         if re.match('\s*No\s+Hit\s+Prob\s+E-value\s+P-value\s+Score\s+SS\s+Cols\s+Query\s+HMM\s+Template\s+HMM\s*', line):
-            for line in lines[index + 1:]:
+            for line in hh_output_lines[index + 1:]:
                 if re.match('^\s*$', line):
                     # Stop at the empty line.
                     break

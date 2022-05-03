@@ -182,6 +182,13 @@
                         </button>
                     </section>
                     <section>
+                        <!--<label for="uploadCustomPDB" id="pdb-upload" class="btn btn-outline-dark">Upload a custom PDB</label>
+                        <input id="uploadCustomPDB" class="btn btn-outline-dark" type="file" accept=".pdb" ref="customPDBfile" v-on:change="uploadCustomPDB()"/>-->
+                        OR
+                        <label for="uploadHhAlignResults" id="hhr-upload" class="btn btn-outline-dark">Upload a custom HHR</label>
+                        <input id="uploadHhAlignResults" class="btn btn-outline-dark" type="file" accept=".hhr" ref="customHhrFile" v-on:change="uploadCustomHHR()"/>
+                    </section>
+                    <section>
                         <label id="invalidPermutationIndicesMessage" style="color:red;display:none;">
                             Invalid indices!
                         </label>
@@ -999,6 +1006,8 @@
             downloadPermutation();
         },processPermutation(){
             processPermutation();
+        },uploadCustomHHR(){
+            uploadCustomHHR();
         },showPermutationWindows(){
             showPermutationWindows();
         },validatePermutationIndices(){

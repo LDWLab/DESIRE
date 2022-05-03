@@ -56,6 +56,7 @@ urlpatterns = [
     path('allProteinTypes', views.allProteinTypes, name = 'allProteinTypes'),
     path('allSpecies', views.allSpecies, name = 'allSpecies'),
     path('proteinTypes/<str:concatenatedTaxIds>', views.proteinTypesDirect, name = 'proteinTypesDirect'),
+    path('parseHhOutput', views.parse_hh_output, name = 'parse_hh_output'),
     path('getAlignmentsFilterByProteinTypeAndTaxIds', views.getAlignmentsFilterByProteinTypeAndTaxIds, name = 'getAlignmentsFilterByProteinTypeAndTaxIds'),
     path('getAlignmentsFilterByProteinTypeAndTaxIds/<str:concatenatedProteinTypes>/<str:concatenatedTaxIds>', views.getAlignmentsFilterByProteinTypeAndTaxIdsDirect, name = 'getAlignmentsFilterByProteinTypeAndTaxIds'),
     path('getAlignmentsFilterByProteinType', views.getAlignmentsFilterByProteinTypeDirect, name = 'getAlignmentsFilterByProteinType'),

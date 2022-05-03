@@ -559,21 +559,40 @@ function handlePropensities(checked_propensities) {
     }
 }
 
+function populateHitResultsSelect(parsed_hh_output_hit_lines) {
+    vm.parsed_hh_output_hit_lines = parsed_hh_output_hit_lines;
+    var permutationHitResultsSelect = document.getElementById("permutationHitResultsSelect");
+    parsed_hh_output_hit_lines.forEach(parsed_hh_output_hit_line => {
+        var new_option = document.createElement("option");
+        new_option.innerHTML = `${parsed_hh_output_hit_line.pdb_id} (${parsed_hh_output_hit_line.match_percentage}%)`;
+        new_option.value = new_option.innerHTML;
+        permutationHitResultsSelect.appendChild(new_option);
+    });
+    permutationHitResultsSelect.selectedIndex = -1;
+    permutationHitResultsSelect.style.display = "block";
+}
+
 function processPermutation() {
     let customFasta = vm.fasta_data;
     let indices = document.getElementById("permutation_indices_input").value;
-    ajax(/permutation-data/, {customFasta, indices}).then(parsed_hh_output_hit_lines => {
-        vm.parsed_hh_output_hit_lines = parsed_hh_output_hit_lines;
-        var permutationHitResultsSelect = document.getElementById("permutationHitResultsSelect");
-        parsed_hh_output_hit_lines.forEach(parsed_hh_output_hit_line => {
-            var new_option = document.createElement("option");
-            new_option.innerHTML = `${parsed_hh_output_hit_line.pdb_id} (${parsed_hh_output_hit_line.match_percentage}%)`;
-            new_option.value = new_option.innerHTML;
-            permutationHitResultsSelect.appendChild(new_option);
-        });
-        permutationHitResultsSelect.selectedIndex = -1;
-        permutationHitResultsSelect.style.display = "block";
+    ajax("permutation-data", {customFasta, indices}).then(parsed_hh_output_hit_lines => {
+        populateHitResultsSelect(parsed_hh_output_hit_lines);
     });
+}
+
+function uploadCustomHHR() {
+    if (vm.$refs.customHhrFile.files.length == 0) {
+        return;
+    }
+    let fileReader = new FileReader();
+    fileReader.onload = function() {
+        let url = "/parseHhOutput";
+        let hh_output = fileReader.result;
+        ajax(url, {hh_output}).then(parsed_hh_output_hit_lines => {
+            populateHitResultsSelect(parsed_hh_output_hit_lines);
+        });
+    }
+    fileReader.readAsText(vm.$refs.customHhrFile.files[0]);
 }
 
 function showPermutationWindows() {

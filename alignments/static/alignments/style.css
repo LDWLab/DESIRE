@@ -288,7 +288,7 @@
   }
 
   #selectaln, #pdb_input, #polymerSelect, #domainSelect, #downloadDataBtn, #downloadExampleFasta,
-  #propensitiesSubstructure, #downloadExampleCSV, #uploadShowFasta, #pdb_input_custom, #pdb-upload,
+  #propensitiesSubstructure, #downloadExampleCSV, #uploadShowFasta, #pdb_input_custom, #pdb-upload, #hhr-upload,
   #maskingSection, .input-group-text, #filterSection, #disableCutTruncation, #disableDomainTruncation,
   #downloadFreqsBtn {
     width: 267px;
@@ -315,11 +315,12 @@
 
   #inputRV3State,
   #uploadCustomPDB,
+  #uploadHhAlignResults,
   #Counter{
     display: none;
   }
 
-#pdb-upload{
+#pdb-upload, #hhr-upload{
   cursor: pointer;
 }
 
