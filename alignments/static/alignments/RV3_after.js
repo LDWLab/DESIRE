@@ -573,9 +573,15 @@ function populateHitResultsSelect(parsed_hh_output_hit_lines) {
 }
 
 function processPermutation() {
+    // let customFasta = vm.fasta_data;
+    // let indices = document.getElementById("permutation_indices_input").value;
+    // ajax("/permutation-data", {customFasta, indices}).then(parsed_hh_output_hit_lines => {
+    //     populateHitResultsSelect(parsed_hh_output_hit_lines);
+    // });
+    let url = "/permutation-data";
     let customFasta = vm.fasta_data;
     let indices = document.getElementById("permutation_indices_input").value;
-    ajax("permutation-data", {customFasta, indices}).then(parsed_hh_output_hit_lines => {
+    ajax(url, {customFasta, indices}).then(parsed_hh_output_hit_lines => {
         populateHitResultsSelect(parsed_hh_output_hit_lines);
     });
 }

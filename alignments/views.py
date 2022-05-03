@@ -836,6 +836,7 @@ def propensity_data(request, aln_id, tax_group):
     return JsonResponse(data)
 
 def permutation_data(request):
+    # return JsonResponse("request.method == 'POST' " + str(request.method == 'POST') + " " + str(request.method), safe=False)
     from io import StringIO
     from Bio import AlignIO
     fasta_variable_name = 'customFasta'
@@ -897,16 +898,18 @@ def permutation_data(request):
     fileNameSuffix = "_" + str(now.year) + "_" + str(now.month) + "_" + str(now.day) + "_" + str(now.hour) + "_" + str(now.minute) + "_" + str(now.second) + "_" + str(now.microsecond)
     write_to_location = "/home/Desire-DEV/PVDev/static/"
     alignmentFilePath = write_to_location + "permuted_alignment" + fileNameSuffix + ".fasta"
+    # return JsonResponse(alignmentFilePath, safe=False)
 
     fh = open(alignmentFilePath, "w")
     fh.write(permutation_string)
     fh.close()
 
     hhalignOutputFilePath = write_to_location + "test" + fileNameSuffix + ".hhr"
-    output = hhalign(alignmentFilePath, "/home/blastdb/ecodf/ecod_version20220113/20220113/e4gvlA4.hhm", hhalignOutputFilePath)
+    # output = hhalign(alignmentFilePath, "/home/blastdb/ecodf/ecod_version20220113/20220113/e4gvlA4.hhm", hhalignOutputFilePath)
+    output = hhsearch(alignmentFilePath, "/home/blastdb/ecodf/ecod_version20220113/ecod283", hhalignOutputFilePath)
 
     os.remove(alignmentFilePath)
-    os.remove(hhalignOutputFilePath)
+    # os.remove(hhalignOutputFilePath)
 
     return output
 
