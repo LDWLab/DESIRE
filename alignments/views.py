@@ -966,36 +966,42 @@ def parse_hh_output_lines(hh_output_lines):
 def parse_hh_output_hit_lines(hh_output_hit_lines):
     parsed_output = []
     pattern = '^\s*(\d+)\s*e([\d\w]{4})([\d\w]+)(\d)\s+\w+:(\d+)\s*-\s*(\d+)((?:\s*,\s*\w:\d+\s*-\s*\d+\s*)*)\s+\d+\s+([\d\.]+)'
-    for line_index, line in enumerate(hh_output_hit_lines):
-        regex_results = re.search(pattern, line)
-        if regex_results is None:
-            raise ValueError(f"The hh output line #{line_index} does not match the expected hit format. Its results could not be parsed.")
-        regex_results_groups = regex_results.groups()
-        start_variable_name = "start"
-        stop_variable_name = "stop"
-        _range = [{
-            start_variable_name: int(regex_results_groups[4]),
-            stop_variable_name: int(regex_results_groups[5])
-        }]
-        extended_range_string = regex_results_groups[6]
-        extended_range_string = re.sub("^[\s,]+", "", extended_range_string)
-        extended_range_string = re.sub("[\s,]+$", "", extended_range_string)
-        if len(extended_range_string) > 0:
-            for range_portion in extended_range_string.split(","):
-                range_portion_regex = re.search("\s*(\d+)\s*-\s*(\d+)", range_portion)
-                range_portion_regex_groups = range_portion_regex.groups()
-                _range.append({
-                    start_variable_name: int(range_portion_regex_groups[0]),
-                    stop_variable_name: int(range_portion_regex_groups[1])
-                })
-        parsed_output.append({
-            "hit_no": int(regex_results_groups[0]),
-            "pdb_id": regex_results_groups[1],
-            "chain_id": regex_results_groups[2],
-            "pseudo_entity_id": int(regex_results_groups[3]),
-            "range": _range,
-            "match_percentage": float(regex_results_groups[7])
-        })
+    try:
+        for line_index, line in enumerate(hh_output_hit_lines):
+            regex_results = re.search(pattern, line)
+            if regex_results is None:
+                # Skip incompatible lines for now.
+                continue
+                # raise ValueError(f"The hh output line #{line_index} does not match the expected hit format. Its results could not be parsed.")
+            regex_results_groups = regex_results.groups()
+            # return JsonResponse(str(regex_results_groups), safe=False)
+            start_variable_name = "start"
+            stop_variable_name = "stop"
+            _range = [{
+                start_variable_name: int(regex_results_groups[4]),
+                stop_variable_name: int(regex_results_groups[5])
+            }]
+            extended_range_string = regex_results_groups[6]
+            extended_range_string = re.sub("^[\s,]+", "", extended_range_string)
+            extended_range_string = re.sub("[\s,]+$", "", extended_range_string)
+            if len(extended_range_string) > 0:
+                for range_portion in extended_range_string.split(","):
+                    range_portion_regex = re.search("\s*(\d+)\s*-\s*(\d+)", range_portion)
+                    range_portion_regex_groups = range_portion_regex.groups()
+                    _range.append({
+                        start_variable_name: int(range_portion_regex_groups[0]),
+                        stop_variable_name: int(range_portion_regex_groups[1])
+                    })
+            parsed_output.append({
+                "hit_no": int(regex_results_groups[0]),
+                "pdb_id": regex_results_groups[1],
+                "chain_id": regex_results_groups[2],
+                "pseudo_entity_id": int(regex_results_groups[3]),
+                "range": _range,
+                "match_percentage": float(regex_results_groups[7])
+            })
+    except:
+        pass
     return JsonResponse(parsed_output, safe=False)
 
 # def parse_hh_output(hh_output_file_path):
