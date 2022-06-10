@@ -706,13 +706,12 @@
             if (this.alnobj != null) {this.alnobj = null;}
             if (type_tree == "orth"){
                 this.alignments = null;
-                var url = '/getAlignmentsFilterByProteinTypeAndTaxIDs';
+                var url = '/getAlignmentsFilterByProteinTypeAndTaxIds';
                 let selectedProteinType = vm.protein_type_obj;
                 let taxIDs = '';
                 vm.tax_id.forEach(element => {
                     taxIDs += element + ",";
                 });
-                console.log(`url: ${url}\nselectedProteinType: ${selectedProteinType}\ntaxIDs: ${taxIDs}`);
                 ajax(url, {selectedProteinType, taxIDs}).then(data => {
                 // ajax(url).then(data => {
                     let results = data["results"];
@@ -785,7 +784,7 @@
                 var url = `/ortholog-aln-api/${aln_id}/${taxid}`}
             if (type_tree == "para"){
                 var url = '/paralog-aln-api/'+aln_id.split(',')[1]}
-            if ((type_tree == "upload" || type_tree == "perm") && !this.uploadSession&& this.cdhitSelectedOpt != "untrunc"){
+            if ((type_tree == "upload" || type_tree == "perm") && !this.uploadSession && this.cdhitSelectedOpt != "untrunc"){
                 var url = '/custom-aln-data'
             }
             if ((type_tree == "upload" || type_tree == "perm") && !this.uploadSession && this.cdhitSelectedOpt == "untrunc"){

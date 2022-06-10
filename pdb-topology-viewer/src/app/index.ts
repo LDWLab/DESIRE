@@ -27,9 +27,9 @@ class PdbTopologyViewerPlugin {
         qualityBlank: 'rgb(255,255,255)'
     }
 
-    displayStyle = 'border:1px solid #696969;';
+    displayStyle = 'border:1px solid #696969; width:100%; height:100%;';
     errorStyle = 'border:1px solid #696969; height:54%; padding-top:46%; text-align:center; font-weight:bold;';
-    menuStyle = 'position:relative;height:38px;line-height:38px;background-color:#96c9dc;padding: 0 10px;font-size:16px; color: black;';
+    menuStyle = 'top:460;position:relative;height:38px;line-height:38px;background-color:#96c9dc;padding: 0 10px;font-size:16px; color: black;';
 
 
     sequenceArr: string[];
@@ -855,7 +855,7 @@ class PdbTopologyViewerPlugin {
     drawTopologyStructures() {
         //Add container elements
         this.targetEle.innerHTML = `<div style="${this.displayStyle}">
-            <div class="svgSection" style="position:relative;width:100%;"></div>
+            <div class="svgSection" style="position:absolute;width:100%;height:460;"></div>
             <div style="${this.menuStyle}">
                 <a style="color: black;border-bottom:none; cursor:pointer;margin-left: 16px;" target="_blank" href="https://pdbe.org/${this.entryId}">${this.entryId}</a> | <span class="menuDesc">Entity ${this.entityId} | Chain ${this.chainId.toUpperCase()}</span>
                 <div class="menuOptions" style="float:right;margin-right: 20px;">
@@ -876,14 +876,14 @@ class PdbTopologyViewerPlugin {
         
         //Set svg section dimensions
         const svgSection:any = this.targetEle.querySelector('.svgSection');
-        const svgSectionHt = targetEleHt - 40;
-        const svgSectionWt = targetEleWt;
-        svgSection.style.height = svgSectionHt+'px';
+        // const svgSectionHt = targetEleHt - 40;
+        // const svgSectionWt = targetEleWt;
+        // svgSection.style.height = svgSectionHt+'px';
 
         //Set svg dimensions
-        const svgHt = svgSectionHt - 20;
-        const svgWt = svgSectionWt - 5;
-        svgSection.innerHTML = `<svg class="topoSvg" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" style="width:${svgWt}px;height:${svgHt}px;margin:10px 0;"></svg>`;
+        // const svgHt = svgSectionHt - 20;
+        // const svgWt = svgSectionWt - 5;
+        svgSection.innerHTML = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" style="width:calc(100%-5px);height:calc(100%-20px);margin:10px 0;"><g class="topoSvg" transform="scale(${440 / 500})"></g></svg>`;
 
         this.svgEle = d3.select(this.targetEle).select('.topoSvg');
        

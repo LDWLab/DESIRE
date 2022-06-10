@@ -81,8 +81,8 @@ def constructEbiAlignmentString(fasta, ebi_sequence, startIndex):
     now = datetime.datetime.now()
     fileNameSuffix = "_" + str(now.year) + "_" + str(now.month) + "_" + str(now.day) + "_" + str(now.hour) + "_" + str(now.minute) + "_" + str(now.second) + "_" + str(now.microsecond)
     ### BE CAREFUL WHEN MERGING THE FOLLOWING LINES TO PUBLIC; PATHS ARE HARDCODED FOR THE APACHE SERVER ###
-    alignmentFileName = "./static/alignment" + fileNameSuffix + ".txt"
-    ebiFileName = "./static/ebi_sequence" + fileNameSuffix + ".txt"
+    alignmentFileName = "/home/Desire-DEV/PVDev/static/alignment" + fileNameSuffix + ".txt"
+    ebiFileName = "/home/Desire-DEV/PVDev/static/ebi_sequence" + fileNameSuffix + ".txt"
     mappingFileName = ebiFileName + ".map"
     fasta = re.sub('>Structure sequence[\s\S]*?>','>',fasta)
     fh = open(alignmentFileName, "w")
@@ -667,7 +667,6 @@ def simple_fasta(request, aln_id, tax_group, internal=False):
     response_dict = construct_dict_for_json_response([concat_fasta,filtered_spec_list,gap_only_cols,frequency_list,twc])
 
     return JsonResponse(response_dict, safe = False)
-
 def string_fasta(request, protein_type, aln_name, tax_group, internal=False):
     if type(tax_group) == int:
         tax_group = str(tax_group)

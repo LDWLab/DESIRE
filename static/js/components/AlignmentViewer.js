@@ -159,6 +159,7 @@ var AlnViewer = class RV3AlnViewer extends Component {
                             width: (window.innerWidth - 300) * 0.2,
                             paddingTop: 13.6,
                             marginRight: 3,
+                            backgroundColor: "white"
                             }}
                         />
                         

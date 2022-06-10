@@ -61,9 +61,9 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
             qualityOrange: 'rgb(291.42857142857144,121.42857142857143,0)',
             qualityBlank: 'rgb(255,255,255)'
         };
-        this.displayStyle = 'border:1px solid #696969;';
+        this.displayStyle = 'border:1px solid #696969; width:100%; height:100%;';
         this.errorStyle = 'border:1px solid #696969; height:54%; padding-top:46%; text-align:center; font-weight:bold;';
-        this.menuStyle = 'position:relative;height:38px;line-height:38px;background-color:#96c9dc;padding: 0 10px;font-size:16px; color: black;';
+        this.menuStyle = 'top:460;position:relative;height:38px;line-height:38px;background-color:#96c9dc;padding: 0 10px;font-size:16px; color: black;';
         this.svgWidth = 100;
         this.svgHeight = 100;
         this.pvAPI = false;
@@ -156,6 +156,7 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
     }
     PdbTopologyViewerPlugin.prototype.render = function (target, options) {
         var _this_1 = this;
+        var _a;
         if (options && typeof options.displayStyle != 'undefined' && options.displayStyle != null)
             this.displayStyle += options.displayStyle;
         if (options && typeof options.errorStyle != 'undefined' && options.errorStyle != null)
@@ -176,6 +177,7 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
             this.pvAPI = true;
         this.entityId = options.entityId;
         this.entryId = options.entryId.toLowerCase();
+        this.pv_suffix = (_a = options.pv_suffix) !== null && _a !== void 0 ? _a : "";
         //If chain id is not provided then get best chain id from observed residues api
         if (typeof options.chainId == 'undefined' || options.chainId == null) {
             this.getObservedResidues(this.entryId).then(function (result) {
@@ -206,7 +208,7 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
                     }
                     _this_1.apiData = result;
                     //default pdb events
-                    _this_1.pdbevents = _this_1.createNewEvent(['PDB.topologyViewer.click', 'PDB.topologyViewer.mouseover', 'PDB.topologyViewer.mouseout']);
+                    _this_1.pdbevents = _this_1.createNewEvent(["PDB.topologyViewer" + _this_1.pv_suffix + ".click", "PDB.topologyViewer" + _this_1.pv_suffix + ".mouseover", "PDB.topologyViewer" + _this_1.pv_suffix + ".mouseout"]);
                     _this_1.getPDBSequenceArray(_this_1.apiData[0][_this_1.entryId]);
                     _this_1.drawTopologyStructures();
                     _this_1.createDomainDropdown();
@@ -536,7 +538,7 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
     PdbTopologyViewerPlugin.prototype.clickAction = function (eleObj) {
         //Dispatch custom click event
         if (masked_array[eleObj.residue_number - 1] == true) {
-            this.dispatchEvent('PDB.topologyViewer.click', {
+            this.dispatchEvent("PDB.topologyViewer" + this.pv_suffix + ".click", {
                 residueNumber: eleObj.residue_number,
                 type: eleObj.type,
                 entryId: this.entryId,
@@ -570,7 +572,7 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
             //newLine.setAttribute("stroke", "black")
             //document.querySelector('#imageaef08aed83').appendChild(newLine)
             //Dispatch custom mouseover event
-            this.dispatchEvent('PDB.topologyViewer.mouseover', {
+            this.dispatchEvent("PDB.topologyViewer" + this.pv_suffix + ".mouseover", {
                 residueNumber: eleData.residue_number,
                 type: eleData.type,
                 entryId: this.entryId,
@@ -612,7 +614,7 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
             pathElement.attr('stroke', mouseOverColor).attr('stroke-width', strokeWidth);
         }
         //Dispatch custom mouseover event
-        this.dispatchEvent('PDB.topologyViewer.mouseout', {
+        this.dispatchEvent("PDB.topologyViewer" + this.pv_suffix + ".mouseout", {
             filterRange: filterRange,
             entryId: this.entryId,
             entityId: this.entityId,
@@ -942,7 +944,7 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
     PdbTopologyViewerPlugin.prototype.drawTopologyStructures = function () {
         var _this_1 = this;
         //Add container elements
-        this.targetEle.innerHTML = "<div style=\"" + this.displayStyle + "\">\n            <div class=\"svgSection\" style=\"position:relative;width:100%;\"></div>\n            <div style=\"" + this.menuStyle + "\">\n                <a style=\"color: black;border-bottom:none; cursor:pointer;margin-left: 16px;\" target=\"_blank\" href=\"https://pdbe.org/" + this.entryId + "\">" + this.entryId + "</a> | <span class=\"menuDesc\">Entity " + this.entityId + " | Chain " + this.chainId.toUpperCase() + "</span>\n                <div class=\"menuOptions\" style=\"float:right;margin-right: 20px;\">\n                    <select class=\"menuSelectbox\" style=\"margin-right: 10px;\"><option value=\"\">Select</option></select>\n                    <img class=\"saveSVG\" src=\"static/alignments/png/Save.png\" style=\"height:15px; width: 15px; border:0;position: relative;margin-right: 15px;cursor:pointer;\" title=\"saveSVG\" />\n\n                    <img class=\"resetIcon\" src=\"static/alignments/png/refresh.png\" style=\"height:15px; width: 15px; border:0;position: absolute;margin-top: 11px;cursor:pointer;\" title=\"Reset view\" />\n                </div>\n            </div>\n        </div>";
+        this.targetEle.innerHTML = "<div style=\"" + this.displayStyle + "\">\n            <div class=\"svgSection\" style=\"position:absolute;width:100%;height:460;\"></div>\n            <div style=\"" + this.menuStyle + "\">\n                <a style=\"color: black;border-bottom:none; cursor:pointer;margin-left: 16px;\" target=\"_blank\" href=\"https://pdbe.org/" + this.entryId + "\">" + this.entryId + "</a> | <span class=\"menuDesc\">Entity " + this.entityId + " | Chain " + this.chainId.toUpperCase() + "</span>\n                <div class=\"menuOptions\" style=\"float:right;margin-right: 20px;\">\n                    <select class=\"menuSelectbox\" style=\"margin-right: 10px;\"><option value=\"\">Select</option></select>\n                    <img class=\"saveSVG\" src=\"static/alignments/png/Save.png\" style=\"height:15px; width: 15px; border:0;position: relative;margin-right: 15px;cursor:pointer;\" title=\"saveSVG\" />\n\n                    <img class=\"resetIcon\" src=\"static/alignments/png/refresh.png\" style=\"height:15px; width: 15px; border:0;position: absolute;margin-top: 11px;cursor:pointer;\" title=\"Reset view\" />\n                </div>\n            </div>\n        </div>";
         //Get dimensions
         var targetEleWt = this.targetEle.offsetWidth;
         var targetEleHt = this.targetEle.offsetHeight;
@@ -954,13 +956,13 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
             this.targetEle.querySelector('.menuDesc').innerText = this.entityId + " | " + this.chainId.toUpperCase();
         //Set svg section dimensions
         var svgSection = this.targetEle.querySelector('.svgSection');
-        var svgSectionHt = targetEleHt - 40;
-        var svgSectionWt = targetEleWt;
-        svgSection.style.height = svgSectionHt + 'px';
+        // const svgSectionHt = targetEleHt - 40;
+        // const svgSectionWt = targetEleWt;
+        // svgSection.style.height = svgSectionHt+'px';
         //Set svg dimensions
-        var svgHt = svgSectionHt - 20;
-        var svgWt = svgSectionWt - 5;
-        svgSection.innerHTML = "<svg class=\"topoSvg\" preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 100 100\" style=\"width:" + svgWt + "px;height:" + svgHt + "px;margin:10px 0;\"></svg>";
+        // const svgHt = svgSectionHt - 20;
+        // const svgWt = svgSectionWt - 5;
+        svgSection.innerHTML = "<svg preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 100 100\" style=\"width:calc(100%-5px);height:calc(100%-20px);margin:10px 0;\"><g class=\"topoSvg\" transform=\"scale(" + 440 / 500 + ")\"></g></svg>";
         this.svgEle = d3.select(this.targetEle).select('.topoSvg');
         this.getDomainRange();
         this.scaledPointsArr = [];
@@ -1832,13 +1834,13 @@ var PdbTopologyViewerPlugin = /** @class */ (function () {
             _this_1.svgEle.selectAll('.residueHighlight').remove();
         });
         //molstar viewer events
-        document.addEventListener('PDB.molstar.click', function (e) {
+        document.addEventListener("PDB.molstar" + this.pv_suffix + ".click", function (e) {
             _this_1.handleMolstarEvents(e, 'click');
         });
-        document.addEventListener('PDB.molstar.mouseover', function (e) {
+        document.addEventListener("PDB.molstar" + this.pv_suffix + ".mouseover", function (e) {
             _this_1.handleMolstarEvents(e, 'mouseover');
         });
-        document.addEventListener('PDB.molstar.mouseout', function () {
+        document.addEventListener("PDB.molstar" + this.pv_suffix + ".mouseout", function () {
             _this_1.svgEle.selectAll('.residueHighlight').remove();
         });
     };

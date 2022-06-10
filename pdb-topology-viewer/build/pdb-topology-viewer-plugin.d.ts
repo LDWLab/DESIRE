@@ -29,6 +29,7 @@ declare class PdbTopologyViewerPlugin {
     sequenceArr: string[];
     entityId: string;
     entryId: string;
+    pv_suffix: string;
     alreadyRan: boolean;
     chainId: string;
     apiData: any;
@@ -54,6 +55,7 @@ declare class PdbTopologyViewerPlugin {
         errorStyle?: string;
         menuStyle?: string;
         pvAPI?: boolean;
+        pv_suffix?: string;
     }): void;
     initPainting(): void;
     displayError(errType?: string): void;
