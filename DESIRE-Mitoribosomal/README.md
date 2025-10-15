@@ -24,5 +24,5 @@ Log in to the DESIRE database and navigate to the alignment directory
 Run the following lines of code (making sure to replace uL02m with the relevant mito-protein):
 
 python3 upload_accession_hmm.py -c ./CSV/uL02m.csv
-python3 upload_aln_asp1.py uL02m_aligned.fas e```
+python3 upload_aln_asp1.py uL02m_aligned.fas e
 
