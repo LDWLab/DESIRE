@@ -1,12 +1,25 @@
-# DESIRE
+To process the mitoribosomal protein data, make sure you have the following files:
 
-If you have found ProteoVision useful please cite us here http://dx.doi.org/10.1093/nar/gkab351
-## About
+-Files from 1_ALL_HITS (most recent version is v1.5)
+-BINF_Project.py
+-compound_organism_master_table.csv
+-Assembly_Exeption_List_240523.csv
+-Exeption_List_070823.csv
+-Location_Checker_1.csv
 
-ProteoVision is a webserver designed to visualize phylogenetic and structural information about ribosomal proteins in multiple dimensions. ProteoVision complements the previously established ribosomal RNA visualizer, RiboVision. ProteoVision was developed in the Center for Origins of Life (Georgia Tech, Atlanta GA) by Petar Penev, Loren Dean Williams and Anton S. Petrov. Please address your questions regarding ProteoVision to RiboZones@gmail.com.
+Make sure you have the necessary files in the same directory
+Remove headers for all csv files
+Missing mS27,mS33,mS34 aln files
 
-## Contributors
-Caeden Meade, Holly M. McCann, Aparna Maddala, Chad R. Bernier, Vasanta L. Chivukula, Maria Ahmad, Aakash Sharma, Claudia Alvarez-Carreño.
+To batch run the files use the proteo_script.sh file which will process all the files at once, it will take around 2-3 hours
 
-## Licensing 
-Webserver is licensed under the MIT license.
+To add the files into the DESIRE SQL database, make sure you have the following files:
+
+-upload_accession_hmm.py
+-upload_aln_asp1.py
+
+Log in to the DESIRE database and navigate to the alignment directory
+Run the following lines of code (making sure to replace uL02m with the relevant mito-protein):
+
+python3 upload_accession_hmm.py -c ./CSV/uL02m.csv
+python3 upload_aln_asp1.py uL02m_aligned.fas e
