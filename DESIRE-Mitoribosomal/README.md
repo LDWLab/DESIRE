@@ -12,7 +12,9 @@ To process the mitoribosomal protein data, make sure you have the following file
 ```
 
 Make sure you have the necessary files in the same directory
+
 Remove headers for all csv files
+
 Missing mS27,mS33,mS34 aln files
 
 
@@ -26,6 +28,7 @@ To add the files into the DESIRE SQL database, make sure you have the following 
 ```
 
 Log in to the DESIRE database and navigate to the alignment directory
+
 Run the following lines of code (making sure to replace uL02m with the relevant mito-protein):
 
 ```
