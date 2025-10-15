@@ -1,4 +1,5 @@
-```To process the mitoribosomal protein data, make sure you have the following files:
+```
+To process the mitoribosomal protein data, make sure you have the following files:
 
 -Files from 1_ALL_HITS (most recent version is v1.5)
 -BINF_Project.py
