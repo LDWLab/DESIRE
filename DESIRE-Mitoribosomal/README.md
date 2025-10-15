@@ -1,4 +1,4 @@
-#How to process the mitoribosomal protein data
+# How to process the mitoribosomal protein data
 
 To process the mitoribosomal protein data, make sure you have the following files:
 
